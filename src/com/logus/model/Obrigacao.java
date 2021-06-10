@@ -1,19 +1,8 @@
 package com.logus.model;
 
-import java.util.HashMap;
-import java.util.Map;
-
-public class Tranche {
+public class Obrigacao {
 	private Integer id;
 	private String nome;
-	private Map<String, Obrigacao> mapaObricacoes = new HashMap<String, Obrigacao>();
-	public Tranche(String nome) {
-		super();
-		this.nome = nome;
-	}
-	public Tranche() {
-		// TODO Auto-generated constructor stub
-	}
 	public Integer getId() {
 		return id;
 	}
@@ -25,12 +14,6 @@ public class Tranche {
 	}
 	public void setNome(String nome) {
 		this.nome = nome;
-	}
-	public Map<String, Obrigacao> getMapaObricacoes() {
-		return mapaObricacoes;
-	}
-	public void setMapaObricacoes(Map<String, Obrigacao> mapaObricacoes) {
-		this.mapaObricacoes = mapaObricacoes;
 	}
 	public String dbInsert(Contrato contratoCSV) {
 	    String insert = "";
@@ -49,4 +32,5 @@ public class Tranche {
 	        + closing;
 	    return insert;
 	}	
+
 }

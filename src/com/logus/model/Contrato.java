@@ -24,6 +24,7 @@ public class Contrato {
   private String carenciaMeses;
   private String periodicidadeQuitacao;
   private String saldoDevedor;
+  private Tranche tranche;
 
   public Contrato() {
     super();
@@ -203,7 +204,15 @@ public class Contrato {
     this.id = id;
   }
 
-  public String dbInsert() {
+  public Tranche getTranche() {
+	return tranche;
+}
+
+public void setTranche(Tranche tranche) {
+	this.tranche = tranche;
+}
+
+public String dbInsert() {
     String insert = "";
     String ins = "Insert into ";
     String owner = "DIVIDA_PI_2021";

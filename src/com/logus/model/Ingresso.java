@@ -44,7 +44,7 @@ public class Ingresso implements Evento {
 	public void setValorRealizadoDolar(String valorRealizadoDolar) {
 		this.valorRealizadoDolar = valorRealizadoDolar;
 	}  
-	public String dbInsert(int tranche, int seqObrigacao, int sequence) {
+	public String dbInsert(int tranche, int seqObrigacao) {
 		String insert = "";
 		String ins = "Insert into ";
 		String owner = "DIVIDA_PI_2021";
@@ -52,7 +52,6 @@ public class Ingresso implements Evento {
 		String campos = "(SEQ_EVENTO_CONTRATO,DAT_OCORRENCIA,DAT_PREVISAO,DSC_EVENTO,SIT_EVENTO,TIP_EVENTO,VAL_EVENTO,SEQ_OBRIGACAO,SEQ_PENALIDADE,SEQ_TRANCHE_CONTRATO)";
 		String strValues = " values (";
 		StringBuilder values = new StringBuilder();
-		values.append(sequence+",");
 		values.append(this.dataPlanilha+",");
 		values.append(this.dataPlanilha+",");
 		values.append("'',");
@@ -63,7 +62,7 @@ public class Ingresso implements Evento {
 		values.append("'',");
 		values.append(tranche);
 		String closing = ");";
-		insert = ins + owner +"."+ tabela + campos + strValues + sequence + values + closing;
+		insert = ins + owner +"."+ tabela + campos + strValues + values + closing;
 		return insert;
 	}
 }

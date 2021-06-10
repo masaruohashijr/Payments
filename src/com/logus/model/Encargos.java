@@ -45,15 +45,14 @@ public class Encargos implements Evento{
 		this.valorRealizadoDolar = valorRealizadoDolar;
 	}
 	@Override
-	public String dbInsert(int tranche, int seqObrigacao, int sequence) {
+	public String dbInsert(int tranche, int seqObrigacao) {
 		String insert = "";
 		String ins = "Insert into ";
 		String owner = "DIVIDA_PI_2021";
 		String tabela = "DIV_EVENTO_TRANCHE";
-		String campos = "(SEQ_EVENTO_CONTRATO,DAT_OCORRENCIA,DAT_PREVISAO,DSC_EVENTO,SIT_EVENTO,TIP_EVENTO,VAL_EVENTO,SEQ_OBRIGACAO,SEQ_PENALIDADE,SEQ_TRANCHE_CONTRATO)";
+		String campos = "(DAT_OCORRENCIA,DAT_PREVISAO,DSC_EVENTO,SIT_EVENTO,TIP_EVENTO,VAL_EVENTO,SEQ_OBRIGACAO,SEQ_PENALIDADE,SEQ_TRANCHE_CONTRATO)";
 		String strValues = " values (";
 		StringBuilder values = new StringBuilder();
-		values.append(sequence+",");
 		values.append(this.dataPlanilha+",");
 		values.append(this.dataPlanilha+",");
 		values.append("'',");
@@ -64,7 +63,7 @@ public class Encargos implements Evento{
 		values.append("'',");
 		values.append(tranche);
 		String closing = ");";
-		insert = ins + owner +"."+ tabela + campos + strValues + sequence + values + closing;
+		insert = ins + owner +"."+ tabela + campos + strValues + values + closing;
 		return insert;
 	}  
 }

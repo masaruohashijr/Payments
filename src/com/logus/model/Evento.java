@@ -11,7 +11,7 @@ public interface Evento {
 	void setValorRealizadoReal(final String valorRealizadoReal);
 	String getValorRealizadoDolar();
 	void setValorRealizadoDolar(final String valorRealizadoDolar);
-	String dbInsert(int tranche, int seqObrigacao, int sequence);
+	String dbInsert(int seqTranche, int seqObrigacao);
 	String ins = "Insert into ";
 	String owner = "DIVIDA_PI_2021";
 	String strValues = " values (";
