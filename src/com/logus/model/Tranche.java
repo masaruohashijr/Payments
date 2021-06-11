@@ -6,6 +6,7 @@ import java.util.Map;
 public class Tranche {
 	private Integer id;
 	private String nome;
+	private Contrato contrato;
 	private Map<String, Obrigacao> mapaObricacoes = new HashMap<String, Obrigacao>();
 	public Tranche(String nome) {
 		super();
@@ -48,5 +49,17 @@ public class Tranche {
 	    insert = ins + owner + "." + tabela + campos + strValues + values
 	        + closing;
 	    return insert;
-	}	
+	}
+  /**
+   * @return {@link #contrato}
+   */
+  public Contrato getContrato() {
+    return contrato;
+  }
+  /**
+   * @param contrato atualiza {@link #contrato}.
+   */
+  public void setContrato(Contrato contrato) {
+    this.contrato = contrato;
+  }	
 }
