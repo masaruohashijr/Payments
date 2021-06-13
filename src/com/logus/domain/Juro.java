@@ -1,6 +1,8 @@
-package com.logus.model;
+package com.logus.domain;
 
-public class Encargos
+import com.logus.domain.Evento.TipoEventoEnum;
+
+public class Juro
   implements Evento {
   private String dataPlanilha;
   private String situacaoEvento;
@@ -8,7 +10,7 @@ public class Encargos
   private String valorRealizadoReal;
   private String valorRealizadoDolar;
 
-  public Encargos(String[] array) {
+  public Juro(String[] array) {
     super();
     this.dataPlanilha = array[17];
     this.situacaoEvento = array[18];
@@ -29,8 +31,8 @@ public class Encargos
     return situacaoEvento;
   }
 
-  public void setSituacaoEvento(String evento) {
-    this.situacaoEvento = evento;
+  public void setSituacaoEvento(String situacaoEvento) {
+    this.situacaoEvento = situacaoEvento;
   }
 
   public String getValorMoedaOriginal() {
@@ -58,23 +60,20 @@ public class Encargos
   }
 
   @Override
-  public String getNomeEvento() {
-    return "Encargos";
+  public String getNome() {
+    return "Juros";
   }
 
   @Override
   public String getCodigoEvento() {
-    return "ENCARG";
+    return "JUROS";
   }
 
   @Override
   public String dbInsert(int seqTranche, int seqObrigacao) {
     String insert = "";
-    String ins = "Insert into ";
-    String owner = "DIVIDA_PI_2021";
     String tabela = "DIV_EVENTO_TRANCHE";
     String campos = "(DAT_OCORRENCIA,DAT_PREVISAO,DSC_EVENTO,SIT_EVENTO,TIP_EVENTO,VAL_EVENTO,SEQ_OBRIGACAO,SEQ_TRANCHE_CONTRATO)";
-    String strValues = " values (";
     StringBuilder values = new StringBuilder();
     values
         .append("TO_DATE('" + this.dataPlanilha + "','dd/mm/yyyy')" + ",");
@@ -82,13 +81,12 @@ public class Encargos
         .append("TO_DATE('" + this.dataPlanilha + "','dd/mm/yyyy')" + ",");
     values.append("'',");
     values.append("'" + this.situacaoEvento.toUpperCase().trim() + "',");
-    values.append("'" + TipoEventoEnum.ENCARGOS + "',");
+    values.append("'" + TipoEventoEnum.JUROS + "',");
     values.append("'"+this.valorMoedaOriginal+"',");
     values.append(seqObrigacao + ",");
     values.append(seqTranche);
-    String closing = ")";
-    insert = ins + owner + "." + tabela + campos + strValues + values
-        + closing;
+    insert = INSERT_INTO + OWNER + "." + tabela + campos + STR_VALUES + values
+        + CLOSING;
     return insert;
   }
 }

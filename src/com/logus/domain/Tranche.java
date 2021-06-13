@@ -1,4 +1,4 @@
-package com.logus.model;
+package com.logus.domain;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -6,8 +6,8 @@ import java.util.Map;
 public class Tranche {
 	private Integer id;
 	private String nome;
-	private Contrato contrato;
-	private Map<String, Obrigacao> mapaObricacoes = new HashMap<String, Obrigacao>();
+	private Contract contrato;
+	private Map<String, Obrigacao> obricacoesMap = new HashMap<String, Obrigacao>();
 	public Tranche(String nome) {
 		super();
 		this.nome = nome;
@@ -27,39 +27,35 @@ public class Tranche {
 	public void setNome(String nome) {
 		this.nome = nome;
 	}
-	public Map<String, Obrigacao> getMapaObricacoes() {
-		return mapaObricacoes;
+	public Map<String, Obrigacao> getObricacoesMap() {
+		return obricacoesMap;
 	}
 	public void setMapaObricacoes(Map<String, Obrigacao> mapaObricacoes) {
-		this.mapaObricacoes = mapaObricacoes;
+		this.obricacoesMap = mapaObricacoes;
 	}
-	public String dbInsert(Contrato contratoCSV) {
+	public String dbInsert(Contract contratoCSV) {
 	    String insert = "";
-	    String ins = "Insert into ";
-	    String owner = "DIVIDA_PI_2021";
 	    String tabela = "DIV_TRANCHE_CONTRATO";
 	    String campos = "(DAT_INICIAL,NM_TRANCHE_CONTRATO,SEQ_CONTRATO)";
-	    String strValues = " values (";
 	    StringBuilder values = new StringBuilder();
 	    values.append("TO_DATE('" + contratoCSV.getDataAssinatura() + "','dd/mm/yyyy')"
 	        + ",");
 	    values.append("'" + this.nome + "',");
 	    values.append(contratoCSV.getId());
-	    String closing = ")";
-	    insert = ins + owner + "." + tabela + campos + strValues + values
-	        + closing;
+	    insert = DBInserter.INSERT_INTO + DBInserter.OWNER + "." + tabela + campos + DBInserter.STR_VALUES + values
+	        + DBInserter.CLOSING;
 	    return insert;
 	}
   /**
    * @return {@link #contrato}
    */
-  public Contrato getContrato() {
+  public Contract getContrato() {
     return contrato;
   }
   /**
    * @param contrato atualiza {@link #contrato}.
    */
-  public void setContrato(Contrato contrato) {
+  public void setContrato(Contract contrato) {
     this.contrato = contrato;
   }	
 }

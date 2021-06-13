@@ -1,4 +1,4 @@
-package com.logus.model;
+package com.logus.domain;
 
 public class Amortizacao
   implements Evento {
@@ -7,12 +7,6 @@ public class Amortizacao
   private String valorRealizadoReal;
   private String valorRealizadoDolar;
   private String situacaoEvento;
-
-  private String tabela = "DIV_EVENTO_TRANCHE";
-  private String campos = "(SEQ_EVENTO_CONTRATO," + "DAT_OCORRENCIA,"
-      + "DAT_PREVISAO," + "DSC_EVENTO," + "SIT_EVENTO," + "TIP_EVENTO,"
-      + "VAL_EVENTO," + "SEQ_OBRIGACAO," + "SEQ_PENALIDADE,"
-      + "SEQ_TRANCHE_CONTRATO)";
 
   public Amortizacao(String[] array) {
     super();
@@ -68,8 +62,8 @@ public class Amortizacao
   }
 
   @Override
-  public String getNomeEvento() {
-    return "Amortiza��o";
+  public String getNome() {
+    return "Amortização";
   }
 
   @Override
@@ -79,11 +73,8 @@ public class Amortizacao
 
   public String dbInsert(int seqTranche, int seqObrigacao) {
     String insert = "";
-    String ins = "Insert into ";
-    String owner = "DIVIDA_PI_2021";
     String tabela = "DIV_EVENTO_TRANCHE";
     String campos = "(DAT_OCORRENCIA,DAT_PREVISAO,DSC_EVENTO,SIT_EVENTO,TIP_EVENTO,VAL_EVENTO,SEQ_OBRIGACAO,SEQ_TRANCHE_CONTRATO)";
-    String strValues = " values (";
     StringBuilder values = new StringBuilder();
     values
         .append("TO_DATE('" + this.dataPlanilha + "','dd/mm/yyyy')" + ",");
@@ -94,10 +85,9 @@ public class Amortizacao
     values.append("'" + TipoEventoEnum.AMORTIZACAO + "',");
     values.append("'"+this.valorMoedaOriginal+"',");
     values.append(seqObrigacao + ",");
-    values.append(seqTranche);
-    String closing = ")";
-    insert = ins + owner + "." + tabela + campos + strValues + values
-        + closing;
+    values.append(seqTranche);    
+    insert = INSERT_INTO + OWNER + "." + tabela + campos + STR_VALUES + values
+        + CLOSING;
     return insert;
   }
 

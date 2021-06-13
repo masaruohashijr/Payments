@@ -1,4 +1,4 @@
-package com.logus.model;
+package com.logus.domain;
 
 public class Ingresso implements Evento {
 	private String dataPlanilha;
@@ -46,7 +46,7 @@ public class Ingresso implements Evento {
 	} 
 	
 	@Override
-    public String getNomeEvento() {
+    public String getNome() {
       return "Ingresso";
     }
 	
@@ -57,12 +57,9 @@ public class Ingresso implements Evento {
 	
 	public String dbInsert(int seqTranche, int seqObrigacao) {
 		String insert = "";
-		String ins = "Insert into ";
-		String owner = "DIVIDA_PI_2021";
 		String tabela = "DIV_LIBERACAO";
 		String campos = "(DAT_OCORRENCIA,DAT_PREVISAO,"
 		    + "DSC_EVENTO,SIT_EVENTO,TIP_EVENTO,VAL_EVENTO,SEQ_OBRIGACAO,SEQ_TRANCHE_CONTRATO,NOM_LIBERACAO)";
-        String strValues = " values (";
         StringBuilder values = new StringBuilder();
         values.append("TO_DATE('" + this.dataPlanilha + "','dd/mm/yyyy')"
             + ",");
@@ -74,9 +71,8 @@ public class Ingresso implements Evento {
         values.append("'"+this.valorMoedaOriginal+"',");
         values.append(seqObrigacao+",");
         values.append(seqTranche+",");
-        values.append("'Libera��o'");
-		String closing = ")";
-		insert = ins + owner +"."+ tabela + campos + strValues + values + closing;
+        values.append("'Liberação'");
+		insert = INSERT_INTO + OWNER +"."+ tabela + campos + STR_VALUES + values + CLOSING;
 		return insert;
 	}
 }

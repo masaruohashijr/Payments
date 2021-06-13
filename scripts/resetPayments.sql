@@ -1,0 +1,15 @@
+delete from divida_pi_2021.div_evento_tranche;
+delete from divida_pi_2021.div_liberacao;
+delete from divida_pi_2021.div_obrigacao;
+delete from divida_pi_2021.div_tranche_contrato;
+delete from divida_pi_2021.div_contrato;
+update divida_pi_2021.sequence set seq_count = 0  where seq_name = 'seq_evento_contrato';
+update divida_pi_2021.sequence set seq_count = 0  where seq_name = 'seq_obrigacao';
+update divida_pi_2021.sequence set seq_count = 0  where seq_name = 'seq_liberacao';
+update divida_pi_2021.sequence set seq_count = 0  where seq_name = 'seq_tranche_contrato';
+update divida_pi_2021.sequence set seq_count = 0  where seq_name = 'seq_contrato';
+alter trigger TRIGGER_INSERT_EVENTO_TRANCHE enable;
+alter trigger TRIGGER_INSERT_OBRIGACAO enable;
+alter trigger TRIGGER_INSERT_LIBERACAO enable;
+alter trigger TRIGGER_INSERT_TRANCHE_CONT enable;
+alter trigger TRIGGER_INSERT_CONTRATO enable;

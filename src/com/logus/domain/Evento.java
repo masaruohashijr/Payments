@@ -1,6 +1,6 @@
-package com.logus.model;
+package com.logus.domain;
 
-public interface Evento {
+public interface Evento extends DBInserter{
   String getDataPlanilha();
 
   void setDataPlanilha(final String dataPlanilha);
@@ -21,38 +21,32 @@ public interface Evento {
 
   void setValorRealizadoDolar(final String valorRealizadoDolar);
 
-  String getNomeEvento();
+  String getNome();
 
   String getCodigoEvento();
 
   String dbInsert(int seqTranche, int seqObrigacao);
 
-  String ins = "Insert into ";
-  String owner = "DIVIDA_PI_2021";
-  String strValues = " values (";
-  String QUITACAO_OBRIGACAO = "QUITACAO_OBRIGACAO";
-  String LIBERACAO = "LIBERACAO";
-
   public enum TipoEventoEnum {
 
     /**
-     * Liberação do recurso contratado.
+     * LiberaÃ§Ã£o do recurso contratado.
      */
     LIBERACAO,
     /**
-     * Incidência diária de juros.
+     * IncidÃªncia diÃ¡ria de juros.
      */
     INCIDENCIA_JUROS,
     /**
-     * Pagamento do principal da dívida.
+     * Pagamento do principal da dÃ­vida.
      */
     AMORTIZACAO,
     /**
-     * Pagamento do juros da dívida.
+     * Pagamento do juros da dÃ­vida.
      */
     JUROS,
     /**
-     * Pagamento de encargos da dívida.
+     * Pagamento de encargos da dÃ­vida.
      */
     ENCARGOS;
 
