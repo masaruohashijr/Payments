@@ -33,15 +33,26 @@ public class Tranche {
 	public void setMapaObricacoes(Map<String, Obrigacao> mapaObricacoes) {
 		this.obricacoesMap = mapaObricacoes;
 	}
-	public String dbInsert(Contract contratoCSV) {
+	public String dbInsert(Contract contratoCSV, Map<String, Moeda> currenciesAlreadyInserted) {
+		String nomeMoeda = contratoCSV.getNomeMoeda();
+		Moeda moeda = currenciesAlreadyInserted.get(nomeMoeda);
 	    String insert = "";
 	    String tabela = "DIV_TRANCHE_CONTRATO";
-	    String campos = "(DAT_INICIAL,NM_TRANCHE_CONTRATO,SEQ_CONTRATO)";
+	    String campos = "(DAT_INICIAL,"
+	    		+ "NM_TRANCHE_CONTRATO,"
+	    		+ "SEQ_CONTRATO, "
+	    		+ "SEQ_MOEDA_CONTRATAD, "
+	    		+ "SEQ_MOEDA_LOCAL, "
+	    		+ "SEQ_INST_FINANCEIRA "
+	    		+ ")";
 	    StringBuilder values = new StringBuilder();
 	    values.append("TO_DATE('" + contratoCSV.getDataAssinatura() + "','dd/mm/yyyy')"
 	        + ",");
 	    values.append("'" + this.nome + "',");
-	    values.append(contratoCSV.getId());
+	    values.append(contratoCSV.getId() + ",");
+		values.append(moeda.getId() + ",");
+	    values.append(currenciesAlreadyInserted.get("REAL").getId() + ",");
+	    values.append(contratoCSV.getInstitution().getId());
 	    insert = DBInserter.INSERT_INTO + DBInserter.OWNER + "." + tabela + campos + DBInserter.STR_VALUES + values
 	        + DBInserter.CLOSING;
 	    return insert;

@@ -2,6 +2,11 @@ package com.logus.domain;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+
+import com.logus.utils.RepositoryUtil;
 
 public class Contract {
 
@@ -11,10 +16,10 @@ public class Contract {
 	private String nome;
 	private String valorContrato;
 	private String dataAssinatura;
-	private String credor;
+	private String nomeCredor;
 	private String contCred;
 	private String situacao;
-	private String moeda;
+	private String nomeMoeda;
 	private String indexador;
 	private String tipoDivida;
 	private String examContr;
@@ -25,6 +30,8 @@ public class Contract {
 	private String periodicidadeQuitacao;
 	private String saldoDevedor;
 	private Tranche tranche;
+	private Map<String, Moeda> currenciesMap;
+	private InstituicaoFinanceira institution;
 
 	public Contract() {
 		super();
@@ -32,23 +39,23 @@ public class Contract {
 
 	public Contract(String[] array) {
 		super();
-		this.contrato = array[0];
+		this.contrato = array[0].trim();
 		this.nome = array[1].trim();
-		this.valorContrato = array[2];
-		this.dataAssinatura = array[3];
-		this.credor = array[4];
-		this.contCred = array[5];
-		this.situacao = array[6];
-		this.moeda = array[7];
-		this.indexador = array[8];
-		this.tipoDivida = array[9];
-		this.examContr = array[10];
-		this.tipoAmortizacao = array[11];
-		this.dataAmortizacao = array[12];
-		this.prazo = array[13];
-		this.carenciaMeses = array[14];
-		this.periodicidadeQuitacao = array[15];
-		this.saldoDevedor = array[16];
+		this.valorContrato = array[2].trim();
+		this.dataAssinatura = array[3].trim();
+		this.nomeCredor = array[4].trim();
+		this.contCred = array[5].trim();
+		this.situacao = array[6].trim();
+		this.nomeMoeda = array[7].trim();
+		this.indexador = array[8].trim();
+		this.tipoDivida = array[9].trim();
+		this.examContr = array[10].trim();
+		this.tipoAmortizacao = array[11].trim();
+		this.dataAmortizacao = array[12].trim();
+		this.prazo = array[13].trim();
+		this.carenciaMeses = array[14].trim();
+		this.periodicidadeQuitacao = array[15].trim();
+		this.saldoDevedor = array[16].trim();
 	}
 
 	public String getContrato() {
@@ -83,12 +90,12 @@ public class Contract {
 		this.dataAssinatura = dataAssinatura;
 	}
 
-	public String getCredor() {
-		return credor;
+	public String getNomeCredor() {
+		return nomeCredor;
 	}
 
-	public void setCredor(String credor) {
-		this.credor = credor;
+	public void setNomeCredor(String nomeCredor) {
+		this.nomeCredor = nomeCredor;
 	}
 
 	public String getContCred() {
@@ -107,12 +114,12 @@ public class Contract {
 		this.situacao = situacao;
 	}
 
-	public String getMoeda() {
-		return moeda;
+	public String getNomeMoeda() {
+		return nomeMoeda;
 	}
 
-	public void setMoeda(String moeda) {
-		this.moeda = moeda;
+	public void setNomeMoeda(String nomeMoeda) {
+		this.nomeMoeda = nomeMoeda;
 	}
 
 	public String getIndexador() {
@@ -212,18 +219,32 @@ public class Contract {
 		this.tranche = tranche;
 	}
 
-	public String dbInsert() {
+	public String dbInsert(Moeda currency, Credor creditor, Finalidade finality) {
 		String insert = "";
 		String tabela = "DIV_CONTRATO";
-		String campos = "(DAT_INICIAL,NM_CONTRATO,VAL_CONTRATO,SEQ_FINALIDADE_OPERACAO,SEQ_MOEDA_CONTRATADA)";
+		String campos = "(DAT_INICIAL,NM_CONTRATO,VAL_CONTRATO,SEQ_FINALIDADE_OPERACAO,SEQ_MOEDA_CONTRATADA,SEQ_CREDOR)";
 		StringBuilder values = new StringBuilder();
 		values.append("TO_DATE('" + this.dataAssinatura + "','dd/mm/yyyy')" + ",");
 		values.append("'" + this.nome + "',");
 		values.append("'" + this.valorContrato + "',");
-		values.append("'" + "3" + "',");
-		values.append("'1'");
+		values.append(finality.getId() + ",");
+		values.append(currency.getId() + ",");
+		values.append(creditor.getId());
 		insert = DBInserter.INSERT_INTO + DBInserter.OWNER + "." + tabela + campos + DBInserter.STR_VALUES + values
 				+ DBInserter.CLOSING;
 		return insert;
 	}
+
+	public void setInstituicaoFinanceira(InstituicaoFinanceira institution) {
+		this.institution = institution;
+	}
+
+	public InstituicaoFinanceira getInstitution() {
+		return institution;
+	}
+
+	public void setInstitution(InstituicaoFinanceira institution) {
+		this.institution = institution;
+	}
+	
 }

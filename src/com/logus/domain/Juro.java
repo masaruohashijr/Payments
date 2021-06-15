@@ -12,11 +12,11 @@ public class Juro
 
   public Juro(String[] array) {
     super();
-    this.dataPlanilha = array[17];
-    this.situacaoEvento = array[18];
-    this.valorMoedaOriginal = array[20];
-    this.valorRealizadoReal = array[21];
-    this.valorRealizadoDolar = array[22];
+    this.dataPlanilha = array[17].trim();
+    this.situacaoEvento = array[18].trim();
+    this.valorMoedaOriginal = array[20].trim();
+    this.valorRealizadoReal = array[21].trim();
+    this.valorRealizadoDolar = array[22].trim();
   }
 
   public String getDataPlanilha() {
@@ -65,7 +65,7 @@ public class Juro
   }
 
   @Override
-  public String getCodigoEvento() {
+  public String getCodigo() {
     return "JUROS";
   }
 
@@ -81,7 +81,7 @@ public class Juro
         .append("TO_DATE('" + this.dataPlanilha + "','dd/mm/yyyy')" + ",");
     values.append("'',");
     values.append("'" + this.situacaoEvento.toUpperCase().trim() + "',");
-    values.append("'" + TipoEventoEnum.JUROS + "',");
+    values.append("'" + TipoEventoEnum.QUITACAO_OBRIGACAO + "',");
     values.append("'"+this.valorMoedaOriginal+"',");
     values.append(seqObrigacao + ",");
     values.append(seqTranche);

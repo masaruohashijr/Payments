@@ -1,5 +1,6 @@
 package com.logus.utils;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class FromToMap {
@@ -7,6 +8,7 @@ public class FromToMap {
 	private static InheritableThreadLocal<Map<String, String>> deparaDividas;
 	static {
 		FromToMap.deparaDividas = new InheritableThreadLocal<Map<String,String>>();
+		deparaDividas.set(new HashMap<String, String>());
 	}
 	public static Map<String, String> init() {
 		deparaDividas.get().put("PROMORADIA III", "PRO-MORADIA III");
