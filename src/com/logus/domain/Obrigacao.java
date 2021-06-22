@@ -32,7 +32,8 @@ public class Obrigacao {
 		values.append("'0',");
 		values.append("'0',");
 		values.append("'" + getNome() + "',");
-		values.append("'MENSAL',");
+		String periodicidadeQuitacao = tranche.getContrato().getPeriodicidadeQuitacao();
+		values.append("'"+periodicidadeQuitacao.toUpperCase()+"',");
 		values.append(tranche.getId());
 		insert = DBInserter.INSERT_INTO + DBInserter.OWNER + "." + tabela + campos + DBInserter.STR_VALUES + values
 				+ DBInserter.CLOSING;

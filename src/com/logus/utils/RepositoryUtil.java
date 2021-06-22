@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -19,6 +21,9 @@ import com.logus.domain.Obrigacao;
 import com.logus.domain.Tranche;
 
 public class RepositoryUtil {
+	
+	private static SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy"); 
+	
 	public static Map<String, Moeda> loadCurrenciesAlreadyInserted(Connection connection) throws SQLException {
 		Map<String, Moeda> currenciesDB = new HashMap<String, Moeda>();
 		Statement stmt = connection.createStatement();
@@ -227,7 +232,12 @@ public class RepositoryUtil {
 	public static Tranche createTranche(Contract contratoCSV, Map<String, Moeda> currenciesAlreadyInserted,
 			Connection connection) throws SQLException {
 		Statement stmt = connection.createStatement();
-		Tranche tranche = new Tranche("Tranche 1");
+		Tranche tranche = null;
+		if(null!=contratoCSV.getTranche()) {
+			tranche = new Tranche("Aditivo");
+		} else {
+			tranche = new Tranche("Original");
+		}
 		stmt.execute(tranche.dbInsert(contratoCSV, currenciesAlreadyInserted));
 		connection.commit();
 		ResultSet rs = stmt.executeQuery("SELECT seq_count FROM sequence where seq_name = 'seq_tranche_contrato'");
@@ -269,14 +279,14 @@ public class RepositoryUtil {
 	public static Map<String, Credor> loadCreditorsAlreadyInserted(Connection connection) throws SQLException {
 		Map<String, Credor> creditorsDB = new HashMap<String, Credor>();
 		Statement stmt = connection.createStatement();
-		String SQL = "SELECT SEQ_CREDOR, NOM_TIPO_CREDOR FROM DIVIDA_PI_2021.DIV_CREDOR";
+		String SQL = "SELECT SEQ_CREDOR, NM_CREDOR FROM DIVIDA_PI_2021.DIV_CREDOR";
 		ResultSet rs = stmt.executeQuery(SQL);
 		System.out.println(SQL);
 
 		while (rs.next()) {
 			Credor creditor = new Credor();
 			int id = rs.getInt("SEQ_CREDOR");
-			String nome = rs.getString("NOM_TIPO_CREDOR");
+			String nome = rs.getString("NM_CREDOR");
 			creditor.setId(id);
 			creditor.setNome(nome.trim());
 			creditorsDB.put(nome, creditor);
@@ -319,7 +329,7 @@ public class RepositoryUtil {
 	public static Map<String, Indexador> loadIndexersAlreadyInserted(Connection connection) throws SQLException {
 		Map<String, Indexador> indexersDB = new HashMap<String, Indexador>();
 		Statement stmt = connection.createStatement();
-		String SQL = "SELECT SEQ_INDEXADOR, NOM_INDEXADOR, ACRO_INDEXADOR " + "FROM DIVIDA_PI_2021.DIV_INDEXADOR";
+		String SQL = "SELECT SEQ_INDEXADOR, NOM_INDEXADOR, ACRO_INDEXADOR FROM DIVIDA_PI_2021.DIV_INDEXADOR";
 		ResultSet rs = stmt.executeQuery(SQL);
 		System.out.println(SQL);
 
@@ -356,15 +366,27 @@ public class RepositoryUtil {
 		return financialInstitutionDB;
 	}
 
-	public static void updateFinalDateContract(Contract currentContract, String finalDateContract, Connection connection) throws SQLException {
-		Statement stmt = connection.createStatement();
-		String DML = "UPDATE div_tranche_contrato "
+	public static void updateFinalDateContract(Contract currentContract, Date finalDateContract, Connection connection) throws SQLException {
+		Statement stmt2 = connection.createStatement();
+		String DML2 = "UPDATE div_contrato "
 				+ "SET "
-				+ "    dat_final = TO_DATE('" + finalDateContract + "','dd/mm/yyyy') "
+				+ "    dat_final = TO_DATE('" + sdf.format(finalDateContract) + "','dd/mm/yyyy') "
 				+ "WHERE "
-				+ "    seq_tranche_contrato = "+currentContract.getTranche().getId();
-		stmt.executeUpdate(DML);
-		System.out.println(DML);
+				+ "    seq_contrato = "+currentContract.getId();
+		stmt2.executeUpdate(DML2);
+		System.out.println(DML2);
+		connection.commit();
 	}
 
+	public static void updateFinalDateTrancheContract(Contract currentContract, Date finalDateContract, Connection connection) throws SQLException {
+		Statement stmt1 = connection.createStatement();
+		String DML1 = "UPDATE div_tranche_contrato "
+				+ "SET "
+				+ "    dat_final = TO_DATE('" + sdf.format(finalDateContract) + "','dd/mm/yyyy') "
+				+ "WHERE "
+				+ "    seq_tranche_contrato = "+currentContract.getTranche().getId();
+		stmt1.executeUpdate(DML1);
+		System.out.println(DML1);
+		connection.commit();	}
+	
 }

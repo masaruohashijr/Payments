@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Map;
 
 import com.logus.domain.Amortizacao;
@@ -32,6 +35,8 @@ import com.logus.utils.RepositoryUtil;
  *
  */
 public class PaymentsCsv {
+	
+	private static SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 
 	public static void main(String[] args) {
 		Chronometer ch = new Chronometer();
@@ -59,30 +64,37 @@ public class PaymentsCsv {
 
 			int contractCounter = 0;
 			int lineNumber = 0;
-			int batchSize = 500;
-			String finalDateContract = "";
+			int batchSize = 100;
+			Date finalDateContract = null;
 
 			Contract currentContract = null;
 			
 			while ((lineText = lineReader.readLine()) != null) {
 				lineNumber++;
 				String[] ar = lineText.split(";");				
-				finalDateContract = ar[17].trim();
 				
 				// ONLY USED WHEN THE FIRST COLUMN IS FILLED IN SO IT IS NEW CONTRACT. 
 				if (!ar[0].trim().isEmpty()) {
 					// Update the current contract with the final date.
 					if(null!=currentContract) {
-						RepositoryUtil.updateFinalDateContract(currentContract, finalDateContract, connection);
+						if(ar[0].contains("10030003")) {
+							RepositoryUtil.updateFinalDateTrancheContract(currentContract, finalDateContract, connection);
+						} else {
+							RepositoryUtil.updateFinalDateTrancheContract(currentContract, finalDateContract, connection);
+							RepositoryUtil.updateFinalDateContract(currentContract, finalDateContract, connection);
+						}
+						finalDateContract = null;
 					}
-					// a new object of Contract is created.
-					currentContract = new Contract(ar);
-					// logging.
-					System.out.println(++contractCounter + " " + currentContract.toString());
+					if(!ar[0].contains("10030003")) {
+						// a new object of Contract is created.
+						currentContract = new Contract(ar);
+						// logging.
+						System.out.println(++contractCounter + " " + currentContract.toString());
+					} 
 					// get the translated key.
 					String translatedKey = mapKeys.get(currentContract.getNome());
 					// if there were no translated key so it means that is really a new contract.
-					if (translatedKey == null || !contractsAlreadyInserted.containsKey(translatedKey.trim())) {
+					if (null == translatedKey || translatedKey.isEmpty() || !contractsAlreadyInserted.containsKey(translatedKey.trim())) {
 						RepositoryUtil.createContract(currentContract, 
 								currenciesAlreadyInserted, 
 								creditorsAlreadyInserted,
@@ -102,6 +114,14 @@ public class PaymentsCsv {
 						}
 					}
 				}
+				
+				// Updates the possible final date of the current contract.
+				// TODO Only if it is greater than the actual finalDateContract.
+				Date sheetDate = sdf.parse(ar[17].trim());
+				if (null == finalDateContract || sheetDate.after(finalDateContract)) {
+					finalDateContract = sheetDate;
+				}
+				
 				Evento evento = null;
 				// Still in the same line we have to check the type of the Event.
 				// Amortization
@@ -121,7 +141,8 @@ public class PaymentsCsv {
 				Tranche tranche = currentContract.getTranche();
 				// If the current contract is out of Tranche (Slice)
 				// a new one is created and injected.
-				if (null == tranche) {
+				if (null == tranche || ar[0].contains("10030003")) {
+					currentContract.setDataAssinatura(ar[3]);
 					tranche = RepositoryUtil.createTranche(
 							currentContract, 
 							currenciesAlreadyInserted, 
@@ -135,13 +156,14 @@ public class PaymentsCsv {
 				Obrigacao obrigacao = tranche.getObricacoesMap().get(evento.getNome());
 				// If not we have to create the new Charge and put in the Map.
 				// TODO @EDNILSON if (null == obrigacao && !"Ingresso".equals(evento.getNome())) {
-				if (null == obrigacao) {
+				if (null == obrigacao && !(evento instanceof Ingresso)) {
 					obrigacao = RepositoryUtil.createObrigacao(tranche, evento, connection);
 					tranche.getObricacoesMap().put(evento.getNome(), obrigacao);
 				}
 
-				// Get the insert statement from the event.
-				String insert = evento.dbInsert(tranche.getId(), obrigacao.getId());
+				// Get the insert statement from the event.				
+				Integer obrigacaoId = (null==obrigacao)?0:obrigacao.getId();
+				String insert = evento.dbInsert(tranche.getId(), obrigacaoId);
 				System.out.println(contractCounter+" "+evento.getNome()+" "+insert);
 				// Add the event to the current contract.
 				currentContract.add(evento);
@@ -154,8 +176,13 @@ public class PaymentsCsv {
 					connection.commit();
 				}
 			}
+			if(null!=currentContract) {
+				RepositoryUtil.updateFinalDateContract(currentContract, finalDateContract, connection);
+			}			
 			ch.stop();
 		} catch (IOException | SQLException | ConnectionException e) {
+			e.printStackTrace();
+		} catch (ParseException e) {
 			e.printStackTrace();
 		} finally {
 			endAndCloseAll(connection, statement, lineReader, ch);

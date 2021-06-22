@@ -59,7 +59,7 @@ public class Encargos
 
   @Override
   public String getNome() {
-    return "Encargos";
+    return "Outros Encargos";
   }
 
   @Override

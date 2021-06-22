@@ -16,7 +16,7 @@ public class FileReaderUtil {
 		if(FileReaderUtil.lineReader == null) {
 			String csvFilePath = "dvn40700.csv";
 			FileInputStream fis = new FileInputStream(csvFilePath);
-			InputStreamReader isr = new InputStreamReader(fis, "UTF-8");
+			InputStreamReader isr = new InputStreamReader(fis, "ISO-8859-1");
 			BufferedReader reader = new BufferedReader(isr);
 			FileReaderUtil.lineReader = new InheritableThreadLocal<BufferedReader>();
 			FileReaderUtil.lineReader.set(reader);
