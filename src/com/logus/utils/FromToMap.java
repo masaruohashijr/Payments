@@ -25,7 +25,7 @@ public class FromToMap {
 		deparaDividas.get().put("SANEAMENTO PARA TODOS III", "SANEAMENTO PARA TODOS III - PARNAÍBA");
 		deparaDividas.get().put("PROTRANSPORTES - CAIXA", "PROTRANSPORTE");
 		deparaDividas.get().put("FINAC. INVEST. - FINISA I", "FINANCIAMENTO À INFRAESTRUTURA E SANEAMENTO - FINISA I");
-		deparaDividas.get().put("FINISA II", "FINANCIAMENTO À INFRAESTRUTURA E SANEAMENTO");
+		deparaDividas.get().put("FINISA II", "FINANCIAMENTO À INFRAESTRUTURA E SANEAMENTO - FINISA II");
 		deparaDividas.get().put("PARCELAMENTO FCVS/EMGERPI", "");
 		deparaDividas.get().put("PRODESENVOLVIMENTO II", "PRODESENVOLVIMENTO II");
 		deparaDividas.get().put("ADITIVO PRODESENVOLV. II", "PRODESENVOLVIMENTO II");

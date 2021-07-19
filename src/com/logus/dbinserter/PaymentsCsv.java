@@ -77,12 +77,10 @@ public class PaymentsCsv {
 				if (!ar[0].trim().isEmpty()) {
 					// Update the current contract with the final date.
 					if(null!=currentContract) {
-						if(ar[0].contains("10030003")) {
-							RepositoryUtil.updateFinalDateTrancheContract(currentContract, finalDateContract, connection);
-						} else {
-							RepositoryUtil.updateFinalDateTrancheContract(currentContract, finalDateContract, connection);
+						if(!ar[0].contains("10030003")) {
 							RepositoryUtil.updateFinalDateContract(currentContract, finalDateContract, connection);
 						}
+						RepositoryUtil.updateFinalDateTrancheContract(currentContract, finalDateContract, connection);
 						finalDateContract = null;
 					}
 					if(!ar[0].contains("10030003")) {
@@ -90,11 +88,14 @@ public class PaymentsCsv {
 						currentContract = new Contract(ar);
 						// logging.
 						System.out.println(++contractCounter + " " + currentContract.toString());
-					} 
+					}					
 					// get the translated key.
 					String translatedKey = mapKeys.get(currentContract.getNome());
 					// if there were no translated key so it means that is really a new contract.
 					if (null == translatedKey || translatedKey.isEmpty() || !contractsAlreadyInserted.containsKey(translatedKey.trim())) {
+						if(null!= translatedKey && !translatedKey.isEmpty()) {
+							currentContract.setNome(translatedKey);
+						}
 						RepositoryUtil.createContract(currentContract, 
 								currenciesAlreadyInserted, 
 								creditorsAlreadyInserted,
@@ -177,6 +178,9 @@ public class PaymentsCsv {
 				}
 			}
 			if(null!=currentContract) {
+				if(currentContract.getContCred().equals("190.491-39")) {
+					finalDateContract = sdf.parse("08/03/2028");
+				}
 				RepositoryUtil.updateFinalDateContract(currentContract, finalDateContract, connection);
 			}			
 			ch.stop();

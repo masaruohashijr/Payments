@@ -41,10 +41,19 @@ public class Contract {
 		super();
 		this.contrato = array[0].trim();
 		this.nome = array[1].trim();
-		this.valorContrato = array[2].trim();
+		if(this.contrato.equals("10100007")) {
+			this.valorContrato = "259200000";
+		} else if(this.contrato.equals("10100010")) {
+			this.valorContrato = "624639291,6";			
+		} else {
+			this.valorContrato = array[2].trim();
+		}
 		this.dataAssinatura = array[3].trim();
 		this.nomeCredor = array[4].trim();
 		this.contCred = array[5].trim();
+		if(this.contCred.equals("190.491-39")||this.contCred.contains("190.491-39")) {
+			this.nome = "Saneamento para Todos I - S. Pedro";
+		}
 		this.situacao = array[6].trim();
 		this.nomeMoeda = array[7].trim();
 		this.indexador = array[8].trim();
