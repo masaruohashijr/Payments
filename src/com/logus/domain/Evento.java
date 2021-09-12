@@ -52,7 +52,11 @@ public interface Evento extends DBInserter {
 		/**
 		 * Pagamento de encargos da dívida.
 		 */
-		ENCARGOS;
+		ENCARGOS,
+		/**
+		 * Diferença.
+		 */
+		DIFERENCA;
 
 		@Override
 		public String toString() {

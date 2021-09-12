@@ -15,6 +15,7 @@ public class Juro
     this.dataPlanilha = array[17].trim();
     this.situacaoEvento = array[18].trim();
     this.valorMoedaOriginal = array[20].trim();
+    this.valorMoedaOriginal = this.valorMoedaOriginal.replace(".", "").replace(",", ".");
     this.valorRealizadoReal = array[21].trim();
     this.valorRealizadoDolar = array[22].trim();
   }
@@ -82,7 +83,7 @@ public class Juro
     values.append("'',");
     values.append("'" + this.situacaoEvento.toUpperCase().trim() + "',");
     values.append("'" + TipoEventoEnum.QUITACAO_OBRIGACAO + "',");
-    values.append("'"+this.valorMoedaOriginal+"',");
+    values.append(""+this.valorMoedaOriginal+",");
     values.append(seqObrigacao + ",");
     values.append(seqTranche);
     insert = INSERT_INTO + OWNER + "." + tabela + campos + STR_VALUES + values

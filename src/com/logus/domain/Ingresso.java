@@ -11,6 +11,7 @@ public class Ingresso implements Evento {
 		this.dataPlanilha = array[17].trim();
 		this.situacaoEvento = array[18].trim();
 		this.valorMoedaOriginal = array[20].trim();
+		this.valorMoedaOriginal = this.valorMoedaOriginal.replace(".", "").replace(",", ".");
 		this.valorRealizadoReal = array[21].trim();
 		this.valorRealizadoDolar = array[22].trim();
 	}	
@@ -68,7 +69,7 @@ public class Ingresso implements Evento {
         values.append("'',");
         values.append("'"+this.situacaoEvento.toUpperCase().trim()+"',");
         values.append("'"+TipoEventoEnum.LIBERACAO+"',");
-        values.append("'"+this.valorMoedaOriginal+"',");
+        values.append(this.valorMoedaOriginal+",");
         values.append(seqTranche+",");
         values.append("'Liberação'");
 		insert = INSERT_INTO + OWNER +"."+ tabela + campos + STR_VALUES + values + CLOSING;

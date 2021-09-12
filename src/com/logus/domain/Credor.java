@@ -30,7 +30,7 @@ public class Credor {
 	public String dbInsert() {
 		String insert = "";
 		String tabela = "DIV_CREDOR";
-		String campos = "(nm_credor,acronimo_credor,dsc_credor,seq_tipo_credor,flg_ativo)";
+		String campos = "(NOM_credor,acronimo_credor,dsc_credor,seq_tipo_credor,flg_ativo)";
 		StringBuilder values = new StringBuilder();
 		String formattedAcronym = formatAcronym();
 		values.append("'"+this.nome+"', "+"'"+formattedAcronym+"',"+"'"+getNome()+"',1, 1");

@@ -30,7 +30,7 @@ public class Moeda {
 	public String dbInsert() {
 		String insert = "";
 		String tabela = "DIV_MOEDA";
-		String campos = "(nm_moeda, abr_moeda, flg_ativo, icon_moeda) ";
+		String campos = "(NOM_moeda, abr_moeda, flg_ativo, icon_moeda) ";
 		StringBuilder values = new StringBuilder();
 		values.append("'"+this.nome+"', "+"'"+formatAcronym()+"', 1,'$'");
 		insert = DBInserter.INSERT_INTO + DBInserter.OWNER + "." + tabela + campos + DBInserter.STR_VALUES + values

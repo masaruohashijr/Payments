@@ -4,6 +4,8 @@ public class Obrigacao {
 	private Integer id;
 	private String nome;
 	private String codigo;
+	private String expIncidencia;
+	private String expQuitacao;
 
 	public Integer getId() {
 		return id;
@@ -21,16 +23,40 @@ public class Obrigacao {
 		this.nome = nome;
 	}
 
-	public String dbInsert(Tranche tranche) {
+	public String dbInsert(Tranche tranche, Contract contractInfo) {
 		String insert = "";
 		String tabela = "DIV_OBRIGACAO";
 		String campos = "(cod_obrigacao, dat_inicial, "
-				+ "exp_incidencia, exp_quitacao, nm_obrigacao, tip_periodicidade, seq_tranche)";
+				+ "exp_incidencia, exp_quitacao, NOM_obrigacao, tip_periodicidade, seq_tranche)";
 		StringBuilder values = new StringBuilder();
 		values.append("'" + getCodigo() + "',");
 		values.append("TO_DATE('" + tranche.getContrato().getDataAssinatura() + "','dd/mm/yyyy')" + ",");
-		values.append("'0',");
-		values.append("'0',");
+		if(this.nome.equalsIgnoreCase("Amortização")) {
+			if (null!=contractInfo && "SAC".equalsIgnoreCase(contractInfo.getSistema())) {
+				values.append("'VALOR_LIBERACAO',"); // exp incidencia
+				values.append("'TRUNCATE ( SALDO/PARCELAS_RESTANTES )',"); // exp quitacao
+			} else if (null!=contractInfo && "PRICE".equalsIgnoreCase(contractInfo.getSistema())) {
+				values.append("'VALOR_LIBERACAO',"); // exp incidencia
+				values.append("'SALDO * POT(1 + (0.08/12),PARCELAS_RESTANTES)*(0.08/12)/(POT(1 + (0.08/12),PARCELAS_RESTANTES) - 1) - (SALDO * (0.08/12))',"); // exp quitacao
+			} else {
+				values.append("'0',"); // exp incidencia
+				values.append("'0',"); // exp quitacao
+			}
+		} else if(this.nome.equalsIgnoreCase("Juros")) {
+			if (null!=contractInfo && "SAC".equalsIgnoreCase(contractInfo.getSistema())) {
+				values.append("'SE(E_DIA_UTIL, ((POT (1+INDICE(CDI, VERDADEIRO)/100, 1/252) - 1)*118/100)* SALDO_OBRIGACAO(AMORT), 0)',"); // exp incidencia
+				values.append("'SALDO-(((POT (1+INDICE(CDI, VERDADEIRO)/100, 1/252) - 1)*118/100)* SALDO_OBRIGACAO(AMORT))',"); // exp quitacao
+			} else if (null!=contractInfo && "PRICE".equalsIgnoreCase(contractInfo.getSistema())) {
+				values.append("'0',"); // exp incidencia
+				values.append("'SALDO_OBRIGACAO(AMORT, VERDADEIRO)*(0.08/12)',"); // exp quitacao
+			} else {
+				values.append("'0',"); // exp incidencia
+				values.append("'0',"); // exp quitacao
+			}
+		} else {
+			values.append("'0',"); // exp incidencia
+			values.append("'0',"); // exp quitacao
+		}
 		values.append("'" + getNome() + "',");
 		String periodicidadeQuitacao = tranche.getContrato().getPeriodicidadeQuitacao();
 		values.append("'"+periodicidadeQuitacao.toUpperCase()+"',");
@@ -52,6 +78,22 @@ public class Obrigacao {
 	 */
 	public void setCodigo(String codigo) {
 		this.codigo = codigo;
+	}
+
+	public String getExpIncidencia() {
+		return expIncidencia;
+	}
+
+	public void setExpIncidencia(String expIncidencia) {
+		this.expIncidencia = expIncidencia;
+	}
+
+	public String getExpQuitacao() {
+		return expQuitacao;
+	}
+
+	public void setExpQuitacao(String expQuitacao) {
+		this.expQuitacao = expQuitacao;
 	}
 
 }

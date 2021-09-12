@@ -7,12 +7,16 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.Month;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Map;
 
 import com.logus.domain.Amortizacao;
 import com.logus.domain.Contract;
 import com.logus.domain.Credor;
+import com.logus.domain.Diferenca;
 import com.logus.domain.Encargos;
 import com.logus.domain.Evento;
 import com.logus.domain.Finalidade;
@@ -34,6 +38,7 @@ import com.logus.utils.RepositoryUtil;
  * @author Logus
  *
  */
+
 public class PaymentsCsv {
 	
 	private static SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
@@ -42,6 +47,7 @@ public class PaymentsCsv {
 		Chronometer ch = new Chronometer();
 		ch.start();
 		Map<String, String> mapKeys = FromToMap.init();
+		Map<String, Contract> mapInfo = FromToMap.initDividas();
 		Connection connection = null;
 		Statement statement = null;
 		BufferedReader lineReader = null;
@@ -63,14 +69,17 @@ public class PaymentsCsv {
 			String lineText = null;
 
 			int contractCounter = 0;
-			int lineNumber = 0;
+			int qtdEventosRealizados = 1;
 			int batchSize = 100;
+			double totalLiberacoes = 0.0;
+			double totalAmortizacoes = 0.0;
+			boolean registrarDiferenca = false;
 			Date finalDateContract = null;
 
 			Contract currentContract = null;
 			
 			while ((lineText = lineReader.readLine()) != null) {
-				lineNumber++;
+				
 				String[] ar = lineText.split(";");				
 				
 				// ONLY USED WHEN THE FIRST COLUMN IS FILLED IN SO IT IS NEW CONTRACT. 
@@ -86,9 +95,12 @@ public class PaymentsCsv {
 					if(!ar[0].contains("10030003")) {
 						// a new object of Contract is created.
 						currentContract = new Contract(ar);
+						totalAmortizacoes = 0.0;
+						totalLiberacoes = 0.0;
+						registrarDiferenca = true;
 						// logging.
 						System.out.println(++contractCounter + " " + currentContract.toString());
-					}					
+					}
 					// get the translated key.
 					String translatedKey = mapKeys.get(currentContract.getNome());
 					// if there were no translated key so it means that is really a new contract.
@@ -128,6 +140,7 @@ public class PaymentsCsv {
 				// Amortization
 				if (ar[19].trim().equals("Amortizacao")) {
 					evento = new Amortizacao(ar);
+					totalAmortizacoes += Double.valueOf(evento.getValorMoedaOriginal());
 				// Interest
 				} else if (ar[19].trim().equals("Juro")) {
 					evento = new Juro(ar);
@@ -137,6 +150,9 @@ public class PaymentsCsv {
 					// New Capital Release
 				} else if (ar[19].trim().equals("Ingresso")) {
 					evento = new Ingresso(ar);
+					if(evento.getSituacaoEvento().equalsIgnoreCase("Realizado")) {
+						totalLiberacoes += Double.valueOf(evento.getValorMoedaOriginal());
+					}
 				}
 				
 				Tranche tranche = currentContract.getTranche();
@@ -156,21 +172,53 @@ public class PaymentsCsv {
 				// is already available on the map of the Tranche (Slice).
 				Obrigacao obrigacao = tranche.getObricacoesMap().get(evento.getNome());
 				// If not we have to create the new Charge and put in the Map.
-				// TODO @EDNILSON if (null == obrigacao && !"Ingresso".equals(evento.getNome())) {
 				if (null == obrigacao && !(evento instanceof Ingresso)) {
-					obrigacao = RepositoryUtil.createObrigacao(tranche, evento, connection);
+					Contract contractInfo = extractedInfo(mapKeys, mapInfo, currentContract);
+					obrigacao = RepositoryUtil.createObrigacao(tranche, evento, connection, contractInfo);
 					tranche.getObricacoesMap().put(evento.getNome(), obrigacao);
+					if((evento instanceof Amortizacao)&&(contractInfo.getNomeCredor().equalsIgnoreCase("CAIXA")||contractInfo.getNomeCredor().equalsIgnoreCase("CEF"))) {
+						Obrigacao o1 = RepositoryUtil.createJurosDevolvidos(tranche, connection, contractInfo);
+						tranche.getObricacoesMap().put(o1.getNome(), o1);
+						Obrigacao o2 = RepositoryUtil.createJurosProRata(tranche, connection, contractInfo);
+						tranche.getObricacoesMap().put(o2.getNome(), o2);
+						Obrigacao o3 = RepositoryUtil.createTaxaCEF(tranche, connection, contractInfo);
+						tranche.getObricacoesMap().put(o3.getNome(), o3);
+						Obrigacao o4 = RepositoryUtil.createTaxaCEFProRata(tranche, connection, contractInfo);
+						tranche.getObricacoesMap().put(o4.getNome(), o4);
+						Obrigacao o5 = RepositoryUtil.createTaxaDeCredito(tranche, connection, contractInfo);
+						tranche.getObricacoesMap().put(o5.getNome(), o5);
+						Obrigacao o6 = RepositoryUtil.createTaxasDevolvidas(tranche, connection, contractInfo);
+						tranche.getObricacoesMap().put(o6.getNome(), o5);
+					}
 				}
 
 				// Get the insert statement from the event.				
 				Integer obrigacaoId = (null==obrigacao)?0:obrigacao.getId();
-				String insert = evento.dbInsert(tranche.getId(), obrigacaoId);
-				System.out.println(contractCounter+" "+evento.getNome()+" "+insert);
-				// Add the event to the current contract.
-				currentContract.add(evento);
-				// Add Batch
-				statement.addBatch(insert);
-				if(lineNumber % batchSize == 0) {
+				if(evento.getSituacaoEvento().equalsIgnoreCase("Realizado")){
+					String insert = evento.dbInsert(tranche.getId(), obrigacaoId);
+					System.out.println(contractCounter+" "+evento.getNome()+" "+insert);
+					// Add the event to the current contract.
+					currentContract.add(evento);
+					// Add Batch
+					statement.addBatch(insert);
+					qtdEventosRealizados++;
+				}
+				if(registrarDiferenca && eh2021(evento.getDataPlanilha()) && evento.getNome().equalsIgnoreCase("Amortização")) {
+					Contract contractInfo = extractedInfo(mapKeys, mapInfo, currentContract);
+					if(contractInfo.getSaldoDevedorAnoPassado()>0) {
+						double diferenca = contractInfo.getSaldoDevedorAnoPassado() - (totalLiberacoes - totalAmortizacoes);
+						Evento eventoDiferenca = new Diferenca(evento.getDataPlanilha(), String.valueOf(diferenca)); 
+						String insertDiferenca = eventoDiferenca.dbInsert(tranche.getId(), obrigacaoId);
+						System.out.println(contractCounter+" "+eventoDiferenca.getNome()+" "+insertDiferenca);
+						currentContract.add(eventoDiferenca);
+						statement.addBatch(insertDiferenca);
+						qtdEventosRealizados++;
+					}
+					totalAmortizacoes = 0;
+					totalLiberacoes = 0;
+					registrarDiferenca = false;
+				}
+				if(qtdEventosRealizados % batchSize == 0) {
 					// ExecuteBatch
 					statement.executeBatch();				
 					// Send to database
@@ -193,6 +241,21 @@ public class PaymentsCsv {
 		}
 	}
 
+	private static Contract extractedInfo(Map<String, String> mapKeys, Map<String, Contract> mapInfo,
+			Contract currentContract) {
+		Contract contractInfo = null;
+		if(mapInfo.containsKey(currentContract.getNome())) {
+			contractInfo = mapInfo.get(currentContract.getNome());
+		} else if (mapKeys.containsKey(currentContract.getNome())){
+			String key = mapKeys.get(currentContract.getNome());
+			contractInfo = mapInfo.get(key);
+		}					
+		if(null==contractInfo){
+			contractInfo = currentContract;
+		}
+		return contractInfo;
+	}
+
 	private static void endAndCloseAll(Connection connection, Statement statement, BufferedReader lineReader, Chronometer ch) {
 		try {
 			System.out.println("*****************************");
@@ -207,5 +270,14 @@ public class PaymentsCsv {
 		} catch (SQLException | IOException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	private static boolean eh2021(String dataStr) {
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+		LocalDate date = LocalDate.parse(dataStr, dtf);
+		if(date.getYear()==2021) {
+			return true;
+		}
+		return false;
 	}
 }

@@ -39,11 +39,11 @@ public class Tranche {
 	    String insert = "";
 	    String tabela = "DIV_TRANCHE_CONTRATO";
 	    String campos = "(DAT_INICIAL,"
-	    		+ "NM_TRANCHE_CONTRATO,"
+	    		+ "NOM_TRANCHE_CONTRATO,"
 	    		+ "SEQ_CONTRATO, "
-	    		+ "SEQ_MOEDA_CONTRATAD, "
-	    		+ "SEQ_MOEDA_LOCAL, "
-	    		+ "SEQ_INST_FINANCEIRA "
+	    		+ "SEQ_MOEDA_CONTRATADA, "
+	    		+ "SEQ_MOEDA_LOCAL "
+	    		//+ "SEQ_INST_FINANCEIRA "
 	    		+ ")";
 	    StringBuilder values = new StringBuilder();
 	    values.append("TO_DATE('" + contratoCSV.getDataAssinatura() + "','dd/mm/yyyy')"
@@ -51,8 +51,8 @@ public class Tranche {
 	    values.append("'" + this.nome + "',");
 	    values.append(contratoCSV.getId() + ",");
 		values.append(moeda.getId() + ",");
-	    values.append(currenciesAlreadyInserted.get("REAL").getId() + ",");
-	    values.append(contratoCSV.getInstitution().getId());
+	    values.append(currenciesAlreadyInserted.get("REAL").getId());// + ",");
+	    //values.append(contratoCSV.getInstitution().getId());
 	    insert = DBInserter.INSERT_INTO + DBInserter.OWNER + "." + tabela + campos + DBInserter.STR_VALUES + values
 	        + DBInserter.CLOSING;
 	    return insert;

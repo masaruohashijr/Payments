@@ -16,7 +16,10 @@ public class Contract {
 	private String nome;
 	private String valorContrato;
 	private String dataAssinatura;
+	private String dataTermino;
 	private String nomeCredor;
+	private String garantia; 
+	private String sistema; 
 	private String contCred;
 	private String situacao;
 	private String nomeMoeda;
@@ -32,6 +35,7 @@ public class Contract {
 	private Tranche tranche;
 	private Map<String, Moeda> currenciesMap;
 	private InstituicaoFinanceira institution;
+	private double saldoDevedorAnoPassado;
 
 	public Contract() {
 		super();
@@ -51,9 +55,6 @@ public class Contract {
 		this.dataAssinatura = array[3].trim();
 		this.nomeCredor = array[4].trim();
 		this.contCred = array[5].trim();
-		if(this.contCred.equals("190.491-39")||this.contCred.contains("190.491-39")) {
-			this.nome = "Saneamento para Todos I - S. Pedro";
-		}
 		this.situacao = array[6].trim();
 		this.nomeMoeda = array[7].trim();
 		this.indexador = array[8].trim();
@@ -231,7 +232,7 @@ public class Contract {
 	public String dbInsert(Moeda currency, Credor creditor, Finalidade finality) {
 		String insert = "";
 		String tabela = "DIV_CONTRATO";
-		String campos = "(DAT_INICIAL,NM_CONTRATO,VAL_CONTRATO,SEQ_FINALIDADE_OPERACAO,SEQ_MOEDA_CONTRATADA,SEQ_CREDOR)";
+		String campos = "(DAT_INICIAL,NOM_CONTRATO,VAL_CONTRATO,SEQ_FINALIDADE_OPERACAO,SEQ_MOEDA_CONTRATADA,SEQ_CREDOR)";
 		StringBuilder values = new StringBuilder();
 		values.append("TO_DATE('" + this.dataAssinatura + "','dd/mm/yyyy')" + ",");
 		values.append("'" + this.nome + "',");
@@ -254,6 +255,38 @@ public class Contract {
 
 	public void setInstitution(InstituicaoFinanceira institution) {
 		this.institution = institution;
+	}
+
+	public String getGarantia() {
+		return garantia;
+	}
+
+	public void setGarantia(String garantia) {
+		this.garantia = garantia;
+	}
+
+	public String getSistema() {
+		return sistema;
+	}
+
+	public void setSistema(String sistema) {
+		this.sistema = sistema;
+	}
+
+	public String getDataTermino() {
+		return dataTermino;
+	}
+
+	public void setDataTermino(String dataTermino) {
+		this.dataTermino = dataTermino;
+	}
+
+	public void setSaldoDevedorAnoPassado(double saldoDevedorAnoPassado) {
+		this.saldoDevedorAnoPassado = saldoDevedorAnoPassado;
+	}
+
+	public double getSaldoDevedorAnoPassado() {
+		return saldoDevedorAnoPassado;
 	}
 	
 }

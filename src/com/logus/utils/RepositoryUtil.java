@@ -27,14 +27,14 @@ public class RepositoryUtil {
 	public static Map<String, Moeda> loadCurrenciesAlreadyInserted(Connection connection) throws SQLException {
 		Map<String, Moeda> currenciesDB = new HashMap<String, Moeda>();
 		Statement stmt = connection.createStatement();
-		String SQL = "SELECT SEQ_MOEDA, NM_MOEDA FROM DIVIDA_PI_2021.DIV_MOEDA";
+		String SQL = "SELECT SEQ_MOEDA, NOM_MOEDA FROM DIVIDA_PI_2022.DIV_MOEDA";
 		ResultSet rs = stmt.executeQuery(SQL);
 		System.out.println(SQL);
 
 		while (rs.next()) {
 			Moeda moeda = new Moeda();
 			int id = rs.getInt("SEQ_MOEDA");
-			String nome = rs.getString("NM_MOEDA");
+			String nome = rs.getString("NOM_MOEDA");
 			moeda.setId(id);
 			moeda.setNome(nome.trim());
 			currenciesDB.put(nome, moeda);
@@ -45,31 +45,31 @@ public class RepositoryUtil {
 	public static Map<String, Contract> loadContractsAlreadyInserted(Connection connection) throws SQLException {
 		Map<String, Contract> contratosDB = new HashMap<String, Contract>();
 		Statement stmt = connection.createStatement();
-		String SQL = "SELECT A.SEQ_CONTRATO, A.NM_CONTRATO, "
-				+ "B.SEQ_TRANCHE_CONTRATO, B.NM_TRANCHE_CONTRATO, C.SEQ_OBRIGACAO, C.NM_OBRIGACAO "
-				+ "FROM DIVIDA_PI_2021.DIV_CONTRATO A "
-				+ "LEFT JOIN DIVIDA_PI_2021.DIV_TRANCHE_CONTRATO B ON A.SEQ_CONTRATO = B.SEQ_CONTRATO "
-				+ "LEFT JOIN DIVIDA_PI_2021.DIV_OBRIGACAO C ON B.SEQ_TRANCHE_CONTRATO = C.SEQ_TRANCHE";
+		String SQL = "SELECT A.SEQ_CONTRATO, A.NOM_CONTRATO, "
+				+ "B.SEQ_TRANCHE_CONTRATO, B.NOM_TRANCHE_CONTRATO, C.SEQ_OBRIGACAO, C.NOM_OBRIGACAO "
+				+ "FROM DIVIDA_PI_2022.DIV_CONTRATO A "
+				+ "LEFT JOIN DIVIDA_PI_2022.DIV_TRANCHE_CONTRATO B ON A.SEQ_CONTRATO = B.SEQ_CONTRATO "
+				+ "LEFT JOIN DIVIDA_PI_2022.DIV_OBRIGACAO C ON B.SEQ_TRANCHE_CONTRATO = C.SEQ_TRANCHE";
 		ResultSet rs = stmt.executeQuery(SQL);
 		System.out.println(SQL);
 
 		while (rs.next()) {
 			Contract contrato = new Contract();
 			int id = rs.getInt("SEQ_CONTRATO");
-			String nome = rs.getString("NM_CONTRATO");
+			String nome = rs.getString("NOM_CONTRATO");
 			contrato.setId(id);
 			contrato.setNome(nome.trim());
 			int idTranche = rs.getInt("SEQ_TRANCHE_CONTRATO");
 			if (idTranche != 0) {
 				Tranche tranche = new Tranche();
-				String nomeTranche = rs.getString("NM_TRANCHE_CONTRATO");
+				String nomeTranche = rs.getString("NOM_TRANCHE_CONTRATO");
 				tranche.setId(idTranche);
 				tranche.setNome(nomeTranche.trim());
 				contrato.setTranche(tranche);
 				int idObrigacao = rs.getInt("SEQ_OBRIGACAO");
 				if (idObrigacao != 0) {
 					Obrigacao obrigacao = new Obrigacao();
-					String nomeObrigacao = rs.getString("NM_OBRIGACAO");
+					String nomeObrigacao = rs.getString("NOM_OBRIGACAO");
 					obrigacao.setId(idObrigacao);
 					obrigacao.setNome(nomeObrigacao.trim());
 					tranche.getObricacoesMap().put(obrigacao.getNome(), obrigacao);
@@ -213,12 +213,12 @@ public class RepositoryUtil {
 		return newCreditor;
 	}
 
-	public static Obrigacao createObrigacao(Tranche tranche, Evento evento, Connection connection) throws SQLException {
+	public static Obrigacao createObrigacao(Tranche tranche, Evento evento, Connection connection, Contract contractInfo) throws SQLException {
 		Statement stmt = connection.createStatement();
 		Obrigacao obrigacao = new Obrigacao();
 		obrigacao.setNome(evento.getNome());
 		obrigacao.setCodigo(evento.getCodigo());
-		stmt.execute(obrigacao.dbInsert(tranche));
+		stmt.execute(obrigacao.dbInsert(tranche, contractInfo));
 		connection.commit();
 		ResultSet rs = stmt.executeQuery("SELECT seq_count FROM sequence where seq_name = 'seq_obrigacao'");
 		if (rs.next()) {
@@ -229,6 +229,121 @@ public class RepositoryUtil {
 		return obrigacao;
 	}
 
+	public static Obrigacao createJurosDevolvidos(Tranche tranche, Connection connection, Contract contractInfo)
+			throws SQLException {
+		Statement stmt = connection.createStatement();
+		Obrigacao obrigacao = new Obrigacao();
+		obrigacao.setNome("Juros Devolvidos");
+		obrigacao.setCodigo("JR-DEV");
+		obrigacao.setExpIncidencia("'0'");
+		obrigacao.setExpQuitacao("'SALDO_OBRIGACAO(JUROS, FALSO) - (SALDO_OBRIGACAO(AMORT, VERDADEIRO) * (0.08/12))'");
+		stmt.execute(obrigacao.dbInsert(tranche, contractInfo));
+		connection.commit();
+		ResultSet rs = stmt.executeQuery("SELECT seq_count FROM sequence where seq_name = 'seq_obrigacao'");
+		if (rs.next()) {
+			obrigacao.setId(rs.getInt("seq_count"));
+		}
+		rs.close();
+		stmt.close();
+		return obrigacao;
+	}
+	
+	
+	public static Obrigacao createTaxasDevolvidas(Tranche tranche, Connection connection, Contract contractInfo)
+			throws SQLException {
+		Statement stmt = connection.createStatement();
+		Obrigacao obrigacao = new Obrigacao();
+		obrigacao.setNome("Taxas Devolvidas");
+		obrigacao.setCodigo("TX-DEV");
+		obrigacao.setExpIncidencia("'0'");
+		obrigacao.setExpQuitacao("'SALDO_OBRIGACAO('TX-CEF-PR', VERDADEIRO) -(SALDO_OBRIGACAO(AMORT, VERDADEIRO) * (0.02/12))'");
+		stmt.execute(obrigacao.dbInsert(tranche, contractInfo));
+		connection.commit();
+		ResultSet rs = stmt.executeQuery("SELECT seq_count FROM sequence where seq_name = 'seq_obrigacao'");
+		if (rs.next()) {
+			obrigacao.setId(rs.getInt("seq_count"));
+		}
+		rs.close();
+		stmt.close();
+		return obrigacao;
+	}
+	
+	public static Obrigacao createJurosProRata(Tranche tranche, Connection connection, Contract contractInfo)
+			throws SQLException {
+		Statement stmt = connection.createStatement();
+		Obrigacao obrigacao = new Obrigacao();
+		obrigacao.setNome("Juros Pro Rata");
+		obrigacao.setCodigo("JR-PR");
+		obrigacao.setExpIncidencia("'SE(E_DIA_ELEITO,0,((0.08/12) / (DIAS_PERIODO-1) ) * SALDO_OBRIGACAO(AMORT, FALSO))'");
+		obrigacao.setExpQuitacao("'SALDO'");
+		stmt.execute(obrigacao.dbInsert(tranche, contractInfo));
+		connection.commit();
+		ResultSet rs = stmt.executeQuery("SELECT seq_count FROM sequence where seq_name = 'seq_obrigacao'");
+		if (rs.next()) {
+			obrigacao.setId(rs.getInt("seq_count"));
+		}
+		rs.close();
+		stmt.close();
+		return obrigacao;
+	}
+	
+	public static Obrigacao createTaxaCEF(Tranche tranche, Connection connection, Contract contractInfo)
+			throws SQLException {
+		Statement stmt = connection.createStatement();
+		Obrigacao obrigacao = new Obrigacao();
+		obrigacao.setNome("Taxa CEF");
+		obrigacao.setCodigo("TX-CEF");
+		obrigacao.setExpIncidencia("'0'");
+		obrigacao.setExpQuitacao("'SALDO_OBRIGACAO(AMORT, VERDADEIRO)*(0.02/12)'");
+		stmt.execute(obrigacao.dbInsert(tranche, contractInfo));
+		connection.commit();
+		ResultSet rs = stmt.executeQuery("SELECT seq_count FROM sequence where seq_name = 'seq_obrigacao'");
+		if (rs.next()) {
+			obrigacao.setId(rs.getInt("seq_count"));
+		}
+		rs.close();
+		stmt.close();
+		return obrigacao;
+	}
+	
+	public static Obrigacao createTaxaCEFProRata(Tranche tranche, Connection connection, Contract contractInfo)
+			throws SQLException {
+		Statement stmt = connection.createStatement();
+		Obrigacao obrigacao = new Obrigacao();
+		obrigacao.setNome("Taxa CEF Pro Rata");
+		obrigacao.setCodigo("TX-CEF-PR");
+		obrigacao.setExpIncidencia("'0'");
+		obrigacao.setExpQuitacao("'SALDO_OBRIGACAO(AMORT, VERDADEIRO)*(0.02/12)'");
+		stmt.execute(obrigacao.dbInsert(tranche, contractInfo));
+		connection.commit();
+		ResultSet rs = stmt.executeQuery("SELECT seq_count FROM sequence where seq_name = 'seq_obrigacao'");
+		if (rs.next()) {
+			obrigacao.setId(rs.getInt("seq_count"));
+		}
+		rs.close();
+		stmt.close();
+		return obrigacao;
+	}
+	
+	public static Obrigacao createTaxaDeCredito(Tranche tranche, Connection connection, Contract contractInfo)
+			throws SQLException {
+		Statement stmt = connection.createStatement();
+		Obrigacao obrigacao = new Obrigacao();
+		obrigacao.setNome("Taxa de Crédito");
+		obrigacao.setCodigo("TX-CRED");
+		obrigacao.setExpIncidencia("'0'");
+		obrigacao.setExpQuitacao("'SALDO_OBRIGACAO(AMORT, VERDADEIRO) * (0.017/12)'");
+		stmt.execute(obrigacao.dbInsert(tranche, contractInfo));
+		connection.commit();
+		ResultSet rs = stmt.executeQuery("SELECT seq_count FROM sequence where seq_name = 'seq_obrigacao'");
+		if (rs.next()) {
+			obrigacao.setId(rs.getInt("seq_count"));
+		}
+		rs.close();
+		stmt.close();
+		return obrigacao;
+	}
+	
 	public static Tranche createTranche(Contract contratoCSV, Map<String, Moeda> currenciesAlreadyInserted,
 			Connection connection) throws SQLException {
 		Statement stmt = connection.createStatement();
@@ -240,6 +355,11 @@ public class RepositoryUtil {
 		}
 		stmt.execute(tranche.dbInsert(contratoCSV, currenciesAlreadyInserted));
 		connection.commit();
+		try {
+			Thread.sleep(500);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		ResultSet rs = stmt.executeQuery("SELECT seq_count FROM sequence where seq_name = 'seq_tranche_contrato'");
 		if (rs.next()) {
 			tranche.setId(rs.getInt("seq_count"));
@@ -279,14 +399,14 @@ public class RepositoryUtil {
 	public static Map<String, Credor> loadCreditorsAlreadyInserted(Connection connection) throws SQLException {
 		Map<String, Credor> creditorsDB = new HashMap<String, Credor>();
 		Statement stmt = connection.createStatement();
-		String SQL = "SELECT SEQ_CREDOR, NM_CREDOR FROM DIVIDA_PI_2021.DIV_CREDOR";
+		String SQL = "SELECT SEQ_CREDOR, NOM_CREDOR FROM DIVIDA_PI_2022.DIV_CREDOR";
 		ResultSet rs = stmt.executeQuery(SQL);
 		System.out.println(SQL);
 
 		while (rs.next()) {
 			Credor creditor = new Credor();
 			int id = rs.getInt("SEQ_CREDOR");
-			String nome = rs.getString("NM_CREDOR");
+			String nome = rs.getString("NOM_CREDOR");
 			creditor.setId(id);
 			creditor.setNome(nome.trim());
 			creditorsDB.put(nome, creditor);
@@ -297,7 +417,7 @@ public class RepositoryUtil {
 	public static Map<String, Finalidade> loadFinalitiesAlreadyInserted(Connection connection) throws SQLException {
 		Map<String, Finalidade> finalitiesDB = new HashMap<String, Finalidade>();
 		Statement stmt = connection.createStatement();
-		String SQL = "SELECT SEQ_FINALIDADE_OPERACAO, NOM_FINALIDADE FROM DIVIDA_PI_2021.DIV_FINALIDADE_OPERACAO";
+		String SQL = "SELECT SEQ_FINALIDADE_OPERACAO, NOM_FINALIDADE FROM DIVIDA_PI_2022.DIV_FINALIDADE_OPERACAO";
 		ResultSet rs = stmt.executeQuery(SQL);
 		System.out.println(SQL);
 
@@ -329,7 +449,7 @@ public class RepositoryUtil {
 	public static Map<String, Indexador> loadIndexersAlreadyInserted(Connection connection) throws SQLException {
 		Map<String, Indexador> indexersDB = new HashMap<String, Indexador>();
 		Statement stmt = connection.createStatement();
-		String SQL = "SELECT SEQ_INDEXADOR, NOM_INDEXADOR, ACRO_INDEXADOR FROM DIVIDA_PI_2021.DIV_INDEXADOR";
+		String SQL = "SELECT SEQ_INDEXADOR, NOM_INDEXADOR, ACRO_INDEXADOR FROM DIVIDA_PI_2022.DIV_INDEXADOR";
 		ResultSet rs = stmt.executeQuery(SQL);
 		System.out.println(SQL);
 
@@ -351,7 +471,7 @@ public class RepositoryUtil {
 		Map<String, InstituicaoFinanceira> financialInstitutionDB = new HashMap<String, InstituicaoFinanceira>();
 		Statement stmt = connection.createStatement();
 		String SQL = "SELECT SEQ_INST_FINANCEIRA, NOM_INST_FINANCEIRA "
-				+ "FROM DIVIDA_PI_2021.DIV_INSTITUICAO_FINANCEIRA";
+				+ "FROM DIVIDA_PI_2022.DIV_INSTITUICAO_FINANCEIRA";
 		ResultSet rs = stmt.executeQuery(SQL);
 		System.out.println(SQL);
 
