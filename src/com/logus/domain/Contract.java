@@ -23,13 +23,14 @@ public class Contract {
 	private String contCred;
 	private String situacao;
 	private String nomeMoeda;
-	private String indexador;
+	private String indexadorJuros = "";
+	private String indexadorCorrecaoMonetaria = "";
 	private String tipoDivida;
 	private String examContr;
 	private String tipoAmortizacao;
 	private String dataAmortizacao;
 	private String prazo;
-	private String carenciaMeses;
+	private String carenciaMeses = "0";
 	private String periodicidadeQuitacao;
 	private String saldoDevedor;
 	private Tranche tranche;
@@ -57,15 +58,17 @@ public class Contract {
 		this.contCred = array[5].trim();
 		this.situacao = array[6].trim();
 		this.nomeMoeda = array[7].trim();
-		this.indexador = array[8].trim();
+		this.indexadorJuros = array[8].trim();
 		this.tipoDivida = array[9].trim();
 		this.examContr = array[10].trim();
 		this.tipoAmortizacao = array[11].trim();
 		this.dataAmortizacao = array[12].trim();
-		this.prazo = array[13].trim();
-		this.carenciaMeses = array[14].trim();
+		this.prazo = array[13].trim().isBlank()?"0":array[13].trim();		
+		this.carenciaMeses = array[14].trim().isBlank()?"0":array[14].trim();		
 		this.periodicidadeQuitacao = array[15].trim();
 		this.saldoDevedor = array[16].trim();
+		this.sistema = "SAC";
+		this.garantia = "FPE/ICMS";
 	}
 
 	public String getContrato() {
@@ -132,12 +135,12 @@ public class Contract {
 		this.nomeMoeda = nomeMoeda;
 	}
 
-	public String getIndexador() {
-		return indexador;
+	public String getIndexadorJuros() {
+		return indexadorJuros;
 	}
 
-	public void setIndexador(String indexador) {
-		this.indexador = indexador;
+	public void setIndexadorJuros(String indexadorJuros) {
+		this.indexadorJuros = indexadorJuros;
 	}
 
 	public String getTipoDivida() {
@@ -229,16 +232,17 @@ public class Contract {
 		this.tranche = tranche;
 	}
 
-	public String dbInsert(Moeda currency, Credor creditor, Finalidade finality) {
+	public String dbInsert(Moeda currency, Moeda localCurrency, Credor creditor, Finalidade finality) {
 		String insert = "";
 		String tabela = "DIV_CONTRATO";
-		String campos = "(DAT_INICIAL,NOM_CONTRATO,VAL_CONTRATO,SEQ_FINALIDADE_OPERACAO,SEQ_MOEDA_CONTRATADA,SEQ_CREDOR)";
+		String campos = "(DAT_INICIAL,NOM_CONTRATO,VAL_CONTRATO,SEQ_FINALIDADE_OPERACAO,SEQ_MOEDA_CONTRATADA,SEQ_MOEDA_LOCAL,SEQ_CREDOR)";
 		StringBuilder values = new StringBuilder();
 		values.append("TO_DATE('" + this.dataAssinatura + "','dd/mm/yyyy')" + ",");
 		values.append("'" + this.nome + "',");
 		values.append("'" + this.valorContrato + "',");
 		values.append(finality.getId() + ",");
 		values.append(currency.getId() + ",");
+	    values.append(localCurrency.getId() + ",");
 		values.append(creditor.getId());
 		insert = DBInserter.INSERT_INTO + DBInserter.OWNER + "." + tabela + campos + DBInserter.STR_VALUES + values
 				+ DBInserter.CLOSING;
@@ -287,6 +291,14 @@ public class Contract {
 
 	public double getSaldoDevedorAnoPassado() {
 		return saldoDevedorAnoPassado;
+	}
+
+	public String getIndexadorCorrecaoMonetaria() {
+		return indexadorCorrecaoMonetaria;
+	}
+
+	public void setIndexadorCorrecaoMonetaria(String indexadorCorrecaoMonetaria) {
+		this.indexadorCorrecaoMonetaria = indexadorCorrecaoMonetaria;
 	}
 	
 }

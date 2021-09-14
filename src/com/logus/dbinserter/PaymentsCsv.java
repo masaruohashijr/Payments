@@ -20,12 +20,14 @@ import com.logus.domain.Diferenca;
 import com.logus.domain.Encargos;
 import com.logus.domain.Evento;
 import com.logus.domain.Finalidade;
+import com.logus.domain.Garantia;
 import com.logus.domain.Indexador;
 import com.logus.domain.Ingresso;
 import com.logus.domain.InstituicaoFinanceira;
 import com.logus.domain.Juro;
 import com.logus.domain.Moeda;
 import com.logus.domain.Obrigacao;
+import com.logus.domain.Sistema;
 import com.logus.domain.Tranche;
 import com.logus.utils.Chronometer;
 import com.logus.utils.ConnUtil;
@@ -59,6 +61,8 @@ public class PaymentsCsv {
 
 			Map<String, Contract> contractsAlreadyInserted = RepositoryUtil.loadContractsAlreadyInserted(connection);
 			Map<String, Moeda> currenciesAlreadyInserted = RepositoryUtil.loadCurrenciesAlreadyInserted(connection);
+			Map<String, Sistema> systemsAlreadyInserted = RepositoryUtil.loadSystemsAlreadyInserted(connection);
+			Map<String, Garantia> garantiasAlreadyInserted = RepositoryUtil.loadGarantiasAlreadyInserted(connection);
 			Map<String, Credor> creditorsAlreadyInserted = RepositoryUtil.loadCreditorsAlreadyInserted(connection);
 			Map<String, Finalidade> finalitiesAlreadyInserted = RepositoryUtil.loadFinalitiesAlreadyInserted(connection);
 			Map<String, Indexador> indexersAlreadyInserted = RepositoryUtil.loadIndexersAlreadyInserted(connection);
@@ -159,10 +163,17 @@ public class PaymentsCsv {
 				// If the current contract is out of Tranche (Slice)
 				// a new one is created and injected.
 				if (null == tranche || ar[0].contains("10030003")) {
+					Contract contractInfo = extractedInfo(mapKeys, mapInfo, currentContract);
 					currentContract.setDataAssinatura(ar[3]);
+					currentContract.setSistema(contractInfo.getSistema());
+					currentContract.setGarantia(contractInfo.getGarantia());
+					currentContract.setIndexadorJuros(contractInfo.getIndexadorJuros());
+					currentContract.setIndexadorCorrecaoMonetaria(contractInfo.getIndexadorCorrecaoMonetaria());
 					tranche = RepositoryUtil.createTranche(
 							currentContract, 
 							currenciesAlreadyInserted, 
+							systemsAlreadyInserted, 
+							garantiasAlreadyInserted, 
 							connection);
 					currentContract.setTranche(tranche);
 					tranche.setContrato(currentContract);
@@ -203,10 +214,10 @@ public class PaymentsCsv {
 					statement.addBatch(insert);
 					qtdEventosRealizados++;
 				}
-				if(registrarDiferenca && eh2021(evento.getDataPlanilha()) && evento.getNome().equalsIgnoreCase("Amortização")) {
+				if(registrarDiferenca && eh2021(evento.getDataPlanilha()) && evento.getNome().equalsIgnoreCase("AmortizaÃ§Ã£o")) {
 					Contract contractInfo = extractedInfo(mapKeys, mapInfo, currentContract);
 					if(contractInfo.getSaldoDevedorAnoPassado()>0) {
-						double diferenca = contractInfo.getSaldoDevedorAnoPassado() - (totalLiberacoes - totalAmortizacoes);
+						double diferenca =  (totalLiberacoes - totalAmortizacoes) - contractInfo.getSaldoDevedorAnoPassado();
 						Evento eventoDiferenca = new Diferenca(evento.getDataPlanilha(), String.valueOf(diferenca)); 
 						String insertDiferenca = eventoDiferenca.dbInsert(tranche.getId(), obrigacaoId);
 						System.out.println(contractCounter+" "+eventoDiferenca.getNome()+" "+insertDiferenca);
@@ -229,8 +240,9 @@ public class PaymentsCsv {
 				if(currentContract.getContCred().equals("190.491-39")) {
 					finalDateContract = sdf.parse("08/03/2028");
 				}
+				RepositoryUtil.updateFinalDateTrancheContract(currentContract, finalDateContract, connection);
 				RepositoryUtil.updateFinalDateContract(currentContract, finalDateContract, connection);
-			}			
+			}
 			ch.stop();
 		} catch (IOException | SQLException | ConnectionException e) {
 			e.printStackTrace();

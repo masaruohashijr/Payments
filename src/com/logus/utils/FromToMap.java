@@ -133,6 +133,14 @@ public class FromToMap {
 				double saldoDevedorAnoPassado = cell.getNumericCellValue();
 				System.out.println(saldoDevedorAnoPassado);
 				contract.setSaldoDevedorAnoPassado(saldoDevedorAnoPassado);
+				cell = row.getCell(14);
+				String descricaoJuros = cell.getStringCellValue();
+				System.out.println(descricaoJuros);
+				contract.setIndexadorJuros(descricaoJuros);
+				cell = row.getCell(18);
+				String descricaoCorrecao = cell.getStringCellValue();
+				System.out.println(descricaoCorrecao);
+				contract.setIndexadorCorrecaoMonetaria(descricaoCorrecao);
 				deparaDividas.get().put(nomeContrato, contract);
             }
 		} catch (IOException e) {

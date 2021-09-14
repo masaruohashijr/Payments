@@ -4,8 +4,8 @@ public class Obrigacao {
 	private Integer id;
 	private String nome;
 	private String codigo;
-	private String expIncidencia;
-	private String expQuitacao;
+	private String expIncidencia = "'0'";
+	private String expQuitacao = "'0'";
 
 	public Integer getId() {
 		return id;
@@ -27,7 +27,7 @@ public class Obrigacao {
 		String insert = "";
 		String tabela = "DIV_OBRIGACAO";
 		String campos = "(cod_obrigacao, dat_inicial, "
-				+ "exp_incidencia, exp_quitacao, NOM_obrigacao, tip_periodicidade, seq_tranche)";
+				+ "exp_incidencia, exp_quitacao, nom_obrigacao, num_parcelas, tip_periodicidade, seq_tranche)";
 		StringBuilder values = new StringBuilder();
 		values.append("'" + getCodigo() + "',");
 		values.append("TO_DATE('" + tranche.getContrato().getDataAssinatura() + "','dd/mm/yyyy')" + ",");
@@ -54,10 +54,11 @@ public class Obrigacao {
 				values.append("'0',"); // exp quitacao
 			}
 		} else {
-			values.append("'0',"); // exp incidencia
-			values.append("'0',"); // exp quitacao
+			values.append(this.expIncidencia + ","); // exp incidencia
+			values.append(this.expQuitacao + ","); // exp incidencia
 		}
 		values.append("'" + getNome() + "',");
+		values.append(tranche.getContrato().getPrazo()+",");
 		String periodicidadeQuitacao = tranche.getContrato().getPeriodicidadeQuitacao();
 		values.append("'"+periodicidadeQuitacao.toUpperCase()+"',");
 		values.append(tranche.getId());

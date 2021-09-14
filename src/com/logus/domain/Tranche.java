@@ -3,6 +3,8 @@ package com.logus.domain;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.logus.utils.RepositoryUtil;
+
 public class Tranche {
 	private Integer id;
 	private String nome;
@@ -33,7 +35,7 @@ public class Tranche {
 	public void setMapaObricacoes(Map<String, Obrigacao> mapaObricacoes) {
 		this.obricacoesMap = mapaObricacoes;
 	}
-	public String dbInsert(Contract contratoCSV, Map<String, Moeda> currenciesAlreadyInserted) {
+	public String dbInsert(Contract contratoCSV, Map<String, Moeda> currenciesAlreadyInserted, Sistema system, Garantia garantia) {
 		String nomeMoeda = contratoCSV.getNomeMoeda();
 		Moeda moeda = currenciesAlreadyInserted.get(nomeMoeda);
 	    String insert = "";
@@ -42,8 +44,13 @@ public class Tranche {
 	    		+ "NOM_TRANCHE_CONTRATO,"
 	    		+ "SEQ_CONTRATO, "
 	    		+ "SEQ_MOEDA_CONTRATADA, "
-	    		+ "SEQ_MOEDA_LOCAL "
-	    		//+ "SEQ_INST_FINANCEIRA "
+	    		+ "SEQ_MOEDA_LOCAL, "
+	    		+ "SEQ_SISTEMA_AMORT, "
+	    		+ "SEQ_GARANTIA, "
+	    		+ "NUM_CARENCIA_MESES, "
+	    		+ "DSC_JUROS, "
+	    		+ "DSC_CORRECAO, "
+	    		+ "SEQ_INST_FINANCEIRA "
 	    		+ ")";
 	    StringBuilder values = new StringBuilder();
 	    values.append("TO_DATE('" + contratoCSV.getDataAssinatura() + "','dd/mm/yyyy')"
@@ -51,8 +58,13 @@ public class Tranche {
 	    values.append("'" + this.nome + "',");
 	    values.append(contratoCSV.getId() + ",");
 		values.append(moeda.getId() + ",");
-	    values.append(currenciesAlreadyInserted.get("REAL").getId());// + ",");
-	    //values.append(contratoCSV.getInstitution().getId());
+	    values.append(currenciesAlreadyInserted.get("REAL").getId() + ",");
+	    values.append(system.getId() + ",");
+	    values.append(garantia.getId() + ",");
+	    values.append(contratoCSV.getCarenciaMeses() + ",");
+	    values.append("'" + contratoCSV.getIndexadorJuros() + "',");
+	    values.append("'" + contratoCSV.getIndexadorCorrecaoMonetaria() + "',");
+	    values.append(contratoCSV.getInstitution().getId());
 	    insert = DBInserter.INSERT_INTO + DBInserter.OWNER + "." + tabela + campos + DBInserter.STR_VALUES + values
 	        + DBInserter.CLOSING;
 	    return insert;
