@@ -1,5 +1,7 @@
 package com.logus.domain;
 
+import java.time.LocalDate;
+
 public class Diferenca
   implements Evento {
   private String dataPlanilha;
@@ -70,7 +72,7 @@ public class Diferenca
     return "DIFERENCA";
   }
 
-  public String dbInsert(int seqTranche, int seqObrigacao) {
+  public String dbInsert(int seqTranche, int seqObrigacao, LocalDate diaEleito) {
     String insert = "";
     String tabela = "DIV_EVENTO_TRANCHE";
     String campos = "(DAT_OCORRENCIA,DAT_PREVISAO,DSC_EVENTO,SIT_EVENTO,TIP_EVENTO,VAL_EVENTO,SEQ_TRANCHE_CONTRATO)";

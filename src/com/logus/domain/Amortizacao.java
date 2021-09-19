@@ -1,95 +1,99 @@
 package com.logus.domain;
 
-public class Amortizacao
-  implements Evento {
-  private String dataPlanilha;
-  private String valorMoedaOriginal;
-  private String valorRealizadoReal;
-  private String valorRealizadoDolar;
-  private String situacaoEvento;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
-  public Amortizacao(String[] array) {
-    super();
-    this.dataPlanilha = array[17].trim();
-    this.situacaoEvento = array[18].trim();
-    this.valorMoedaOriginal = array[20].trim();
-    this.valorMoedaOriginal = this.valorMoedaOriginal.replace(".", "").replace(",", ".");
-    this.valorRealizadoReal = array[21].trim();
-    this.valorRealizadoDolar = array[22].trim();
-  }
+import com.logus.utils.TextUtils;
 
-  public String getDataPlanilha() {
-    return dataPlanilha;
-  }
+public class Amortizacao implements Evento {
+	private String dataPlanilha;
+	private String valorMoedaOriginal;
+	private String valorRealizadoReal;
+	private String valorRealizadoDolar;
+	private String situacaoEvento;
 
-  public void setDataPlanilha(final String dataPlanilha) {
-    this.dataPlanilha = dataPlanilha;
-  }
+	public Amortizacao(String[] array) {
+		super();
+		this.dataPlanilha = array[17].trim();
+		this.situacaoEvento = array[18].trim();
+		this.valorMoedaOriginal = array[20].trim();
+		this.valorMoedaOriginal = this.valorMoedaOriginal.replace(".", "").replace(",", ".");
+		this.valorRealizadoReal = array[21].trim();
+		this.valorRealizadoDolar = array[22].trim();
+	}
 
-  public String getValorMoedaOriginal() {
-    return valorMoedaOriginal;
-  }
+	public String getDataPlanilha() {
+		return dataPlanilha;
+	}
 
-  public void setValorMoedaOriginal(final String valorMoedaOriginal) {
-    this.valorMoedaOriginal = valorMoedaOriginal;
-  }
+	public void setDataPlanilha(final String dataPlanilha) {
+		this.dataPlanilha = dataPlanilha;
+	}
 
-  public String getValorRealizadoReal() {
-    return valorRealizadoReal;
-  }
+	public String getValorMoedaOriginal() {
+		return valorMoedaOriginal;
+	}
 
-  public void setValorRealizadoReal(final String valorRealizadoReal) {
-    this.valorRealizadoReal = valorRealizadoReal;
-  }
+	public void setValorMoedaOriginal(final String valorMoedaOriginal) {
+		this.valorMoedaOriginal = valorMoedaOriginal;
+	}
 
-  public String getValorRealizadoDolar() {
-    return valorRealizadoDolar;
-  }
+	public String getValorRealizadoReal() {
+		return valorRealizadoReal;
+	}
 
-  public void setValorRealizadoDolar(final String valorRealizadoDolar) {
-    this.valorRealizadoDolar = valorRealizadoDolar;
-  }
+	public void setValorRealizadoReal(final String valorRealizadoReal) {
+		this.valorRealizadoReal = valorRealizadoReal;
+	}
 
-  @Override
-  public String getSituacaoEvento() {
-    // TODO Auto-generated method stub
-    return this.situacaoEvento;
-  }
+	public String getValorRealizadoDolar() {
+		return valorRealizadoDolar;
+	}
 
-  @Override
-  public void setSituacaoEvento(String situacaoEvento) {
-    // TODO Auto-generated method stub
-    this.situacaoEvento = situacaoEvento;
-  }
+	public void setValorRealizadoDolar(final String valorRealizadoDolar) {
+		this.valorRealizadoDolar = valorRealizadoDolar;
+	}
 
-  @Override
-  public String getNome() {
-    return "Amortização";
-  }
+	@Override
+	public String getSituacaoEvento() {
+		// TODO Auto-generated method stub
+		return this.situacaoEvento;
+	}
 
-  @Override
-  public String getCodigo() {
-    return "AMORT";
-  }
+	@Override
+	public void setSituacaoEvento(String situacaoEvento) {
+		// TODO Auto-generated method stub
+		this.situacaoEvento = situacaoEvento;
+	}
 
-  public String dbInsert(int seqTranche, int seqObrigacao) {
-    String insert = "";
-    String tabela = "DIV_EVENTO_TRANCHE";
-    String campos = "(DAT_OCORRENCIA,DAT_PREVISAO,DSC_EVENTO,SIT_EVENTO,TIP_EVENTO,VAL_EVENTO,SEQ_OBRIGACAO,SEQ_TRANCHE_CONTRATO)";
-    StringBuilder values = new StringBuilder();
-    values
-        .append("TO_DATE('" + this.dataPlanilha + "','dd/mm/yyyy')" + ",");
-    values
-        .append("TO_DATE('" + this.dataPlanilha + "','dd/mm/yyyy')" + ",");
-    values.append("'',");
-    values.append("'" + this.situacaoEvento.toUpperCase().trim() + "',");
-    values.append("'" + TipoEventoEnum.QUITACAO_OBRIGACAO + "',");
-    values.append(""+this.valorMoedaOriginal+",");
-    values.append(seqObrigacao + ",");
-    values.append(seqTranche);    
-    insert = INSERT_INTO + OWNER + "." + tabela + campos + STR_VALUES + values
-        + CLOSING;
-    return insert;
-  }
+	@Override
+	public String getNome() {
+		return "Amortização";
+	}
+
+	@Override
+	public String getCodigo() {
+		return "AMORT";
+	}
+
+	public String dbInsert(int seqTranche, int seqObrigacao, LocalDate diaEleito) {
+		String insert = "";
+		String tabela = "DIV_EVENTO_TRANCHE";
+		String campos = "(DAT_OCORRENCIA,DAT_PREVISAO,DSC_EVENTO,SIT_EVENTO,TIP_EVENTO,VAL_EVENTO,SEQ_OBRIGACAO,SEQ_TRANCHE_CONTRATO)";
+		StringBuilder values = new StringBuilder();		
+		values.append("TO_DATE('" + this.dataPlanilha + "','dd/mm/yyyy')" + ",");
+		DateTimeFormatter format = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+		LocalDate dataPrevisao = TextUtils.getDataPrevisao(String.valueOf(diaEleito.getDayOfMonth()), this.dataPlanilha, format);
+		values.append("TO_DATE('" + dataPrevisao.format(format) + "','dd/mm/yyyy')" + ",");
+		values.append("'',");
+		values.append("'" + this.situacaoEvento.toUpperCase().trim() + "',");
+		values.append("'" + TipoEventoEnum.QUITACAO_OBRIGACAO + "',");
+		values.append("" + this.valorMoedaOriginal + ",");
+		values.append(seqObrigacao + ",");
+		values.append(seqTranche);
+		insert = INSERT_INTO + OWNER + "." + tabela + campos + STR_VALUES + values + CLOSING;
+		return insert;
+	}
 
 }
+

@@ -5,6 +5,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,6 +28,7 @@ import com.logus.domain.Tranche;
 public class RepositoryUtil {
 
 	private static SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+	private static DateTimeFormatter format = DateTimeFormatter.ofPattern("dd/MM/yyyy");;
 
 	public static Map<String, Moeda> loadCurrenciesAlreadyInserted(Connection connection) throws SQLException {
 		Map<String, Moeda> currenciesDB = new HashMap<String, Moeda>();
@@ -125,7 +129,7 @@ public class RepositoryUtil {
 			}
 		}
 		InstituicaoFinanceira newInstitution = null;
-		if (null!=institutionName && !institutionName.isEmpty()) {
+		if (null != institutionName && !institutionName.isEmpty()) {
 			newInstitution = createFinancialInstitution(connection, institutionName);
 			financialInstitutionsAlreadyInserted.put(institutionName, newInstitution);
 		}
@@ -157,7 +161,7 @@ public class RepositoryUtil {
 			}
 		}
 		Indexador newIndexer = null;
-		if (null!=indexerName && !indexerName.isEmpty()) {
+		if (null != indexerName && !indexerName.isEmpty()) {
 			newIndexer = createIndexer(connection, indexerName);
 			indexersAlreadyInserted.put(indexerName, newIndexer);
 		}
@@ -227,6 +231,11 @@ public class RepositoryUtil {
 		Obrigacao obrigacao = new Obrigacao();
 		obrigacao.setNome(evento.getNome());
 		obrigacao.setCodigo(evento.getCodigo());
+		LocalDate diaEleito = tranche.getContrato().getDiaEleito();		
+		if(diaEleito==null) {
+			diaEleito = LocalDate.parse(tranche.getContrato().getDataAssinatura(),format);
+		}				
+		obrigacao.setDtInicioPagamento(diaEleito.getDayOfMonth()+"/01/2021");
 		stmt.execute(obrigacao.dbInsert(tranche, contractInfo));
 		connection.commit();
 		ResultSet rs = stmt.executeQuery("SELECT seq_count FROM sequence where seq_name = 'seq_obrigacao'");
@@ -245,7 +254,14 @@ public class RepositoryUtil {
 		obrigacao.setNome("Juros Devolvidos");
 		obrigacao.setCodigo("JR-DEV");
 		obrigacao.setExpIncidencia("'0'");
-		obrigacao.setExpQuitacao("'SALDO_OBRIGACAO(JUROS, FALSO) - (SALDO_OBRIGACAO(AMORT, VERDADEIRO) * (0.08/12))'");
+		LocalDate diaEleito = tranche.getContrato().getDiaEleito();		
+		if(diaEleito==null) {
+			LocalDate.parse(tranche.getContrato().getDataAssinatura(),format);
+		}				
+		obrigacao.setDtInicioPagamento(diaEleito.getDayOfMonth()+"/01/2021");
+		double i = tranche.getContrato().getPercentualJuros() / 100;
+		obrigacao.setExpQuitacao(
+				"'SALDO_OBRIGACAO(JR-PR, VERDADEIRO) - (SALDO_OBRIGACAO(AMORT, VERDADEIRO) * (" + i + "/12))'");
 		stmt.execute(obrigacao.dbInsert(tranche, contractInfo));
 		connection.commit();
 		ResultSet rs = stmt.executeQuery("SELECT seq_count FROM sequence where seq_name = 'seq_obrigacao'");
@@ -266,6 +282,11 @@ public class RepositoryUtil {
 		obrigacao.setExpIncidencia("'0'");
 		obrigacao.setExpQuitacao(
 				"'SALDO_OBRIGACAO(''TX-CEF-PR'', VERDADEIRO) -(SALDO_OBRIGACAO(AMORT, VERDADEIRO) * (0.02/12))'");
+		LocalDate diaEleito = tranche.getContrato().getDiaEleito();		
+		if(diaEleito==null) {
+			LocalDate.parse(tranche.getContrato().getDataAssinatura(),format);
+		}				
+		obrigacao.setDtInicioPagamento(diaEleito.getDayOfMonth()+"/01/2021");
 		stmt.execute(obrigacao.dbInsert(tranche, contractInfo));
 		connection.commit();
 		ResultSet rs = stmt.executeQuery("SELECT seq_count FROM sequence where seq_name = 'seq_obrigacao'");
@@ -283,9 +304,18 @@ public class RepositoryUtil {
 		Obrigacao obrigacao = new Obrigacao();
 		obrigacao.setNome("Juros Pro Rata");
 		obrigacao.setCodigo("JR-PR");
+		LocalDate diaEleito = tranche.getContrato().getDiaEleito();		
+		LocalDate dataAssinatura = LocalDate.parse(tranche.getContrato().getDataAssinatura(), format);
+		String dtInicioPgto = TextUtils.padLeftZeros(String.valueOf(diaEleito.getDayOfMonth()), 2)+
+				"/"+TextUtils.padLeftZeros(String.valueOf(dataAssinatura.getMonthValue()),2)+"/"+
+				dataAssinatura.getYear();
+		obrigacao.setDtInicioPagamento(dtInicioPgto);		
+		double i = tranche.getContrato().getPercentualJuros()/100;
 		obrigacao.setExpIncidencia(
-				"'SE(E_DIA_ELEITO,0,((0.08/12) / (DIAS_PERIODO-1) ) * SALDO_OBRIGACAO(AMORT, FALSO))'");
+				"'SE(E_DIA_ELEITO,0,(("+i+"/12) / (DIAS_PERIODO-1) ) * SALDO_OBRIGACAO(AMORT, VERDADEIRO))'");
 		obrigacao.setExpQuitacao("'SALDO'");
+		String prazo = getPrazo(tranche);
+		obrigacao.setNumeroParcelas(prazo);
 		stmt.execute(obrigacao.dbInsert(tranche, contractInfo));
 		connection.commit();
 		ResultSet rs = stmt.executeQuery("SELECT seq_count FROM sequence where seq_name = 'seq_obrigacao'");
@@ -297,6 +327,15 @@ public class RepositoryUtil {
 		return obrigacao;
 	}
 
+	private static String getPrazo(Tranche tranche) {
+		String dataAssinatura = tranche.getContrato().getDataAssinatura();
+		LocalDate dtAssinatura = LocalDate.parse(dataAssinatura, format);
+		String dataTermino = tranche.getContrato().getDataTermino();
+		LocalDate dtTermino = LocalDate.parse(dataTermino, format);
+		long monthsBetween = ChronoUnit.MONTHS.between(dtAssinatura, dtTermino);
+		return String.valueOf(monthsBetween);
+	}
+
 	public static Obrigacao createTaxaCEF(Tranche tranche, Connection connection, Contract contractInfo)
 			throws SQLException {
 		Statement stmt = connection.createStatement();
@@ -305,6 +344,11 @@ public class RepositoryUtil {
 		obrigacao.setCodigo("TX-CEF");
 		obrigacao.setExpIncidencia("'0'");
 		obrigacao.setExpQuitacao("'SALDO_OBRIGACAO(AMORT, VERDADEIRO)*(0.02/12)'");
+		LocalDate diaEleito = tranche.getContrato().getDiaEleito();		
+		if(diaEleito==null) {
+			LocalDate.parse(tranche.getContrato().getDataAssinatura(),format);
+		}				
+		obrigacao.setDtInicioPagamento(diaEleito.getDayOfMonth()+"/01/2021");
 		stmt.execute(obrigacao.dbInsert(tranche, contractInfo));
 		connection.commit();
 		ResultSet rs = stmt.executeQuery("SELECT seq_count FROM sequence where seq_name = 'seq_obrigacao'");
@@ -322,8 +366,16 @@ public class RepositoryUtil {
 		Obrigacao obrigacao = new Obrigacao();
 		obrigacao.setNome("Taxa CEF Pro Rata");
 		obrigacao.setCodigo("TX-CEF-PR");
-		obrigacao.setExpIncidencia("'0'");
-		obrigacao.setExpQuitacao("'SALDO_OBRIGACAO(AMORT, VERDADEIRO)*(0.02/12)'");
+		obrigacao.setExpIncidencia(
+				"'SE(E_DIA_ELEITO,0,((0.02/12) / (DIAS_PERIODO-1) ) * SALDO_OBRIGACAO(AMORT, FALSO))'");
+		obrigacao.setExpQuitacao("'SALDO'");
+		LocalDate diaEleito = tranche.getContrato().getDiaEleito();		
+		LocalDate dataAssinatura = LocalDate.parse(tranche.getContrato().getDataAssinatura(), format);
+		String dtInicioPgto = TextUtils.padLeftZeros(String.valueOf(diaEleito.getDayOfMonth()), 2)+
+				"/"+TextUtils.padLeftZeros(String.valueOf(dataAssinatura.getMonthValue()),2)+"/"+
+				dataAssinatura.getYear();
+		obrigacao.setDtInicioPagamento(dtInicioPgto);
+		obrigacao.setNumeroParcelas(getPrazo(tranche));
 		stmt.execute(obrigacao.dbInsert(tranche, contractInfo));
 		connection.commit();
 		ResultSet rs = stmt.executeQuery("SELECT seq_count FROM sequence where seq_name = 'seq_obrigacao'");
@@ -342,7 +394,13 @@ public class RepositoryUtil {
 		obrigacao.setNome("Taxa de Crédito");
 		obrigacao.setCodigo("TX-CRED");
 		obrigacao.setExpIncidencia("'0'");
-		obrigacao.setExpQuitacao("'SALDO_OBRIGACAO(AMORT, VERDADEIRO) * (0.017/12)'");
+		double i = tranche.getContrato().getPercentualTxCredito()/100;
+		obrigacao.setExpQuitacao("'SALDO_OBRIGACAO(AMORT, VERDADEIRO) * ("+i+"/12)'");
+		LocalDate diaEleito = tranche.getContrato().getDiaEleito();		
+		if(diaEleito==null) {
+			LocalDate.parse(tranche.getContrato().getDataAssinatura(),format);
+		}				
+		obrigacao.setDtInicioPagamento(diaEleito.getDayOfMonth()+"/01/2021");
 		stmt.execute(obrigacao.dbInsert(tranche, contractInfo));
 		connection.commit();
 		ResultSet rs = stmt.executeQuery("SELECT seq_count FROM sequence where seq_name = 'seq_obrigacao'");
@@ -354,10 +412,8 @@ public class RepositoryUtil {
 		return obrigacao;
 	}
 
-	public static Tranche createTranche(Contract contratoCSV, 
-			Map<String, Moeda> currenciesAlreadyInserted, 
-			Map<String, Sistema> systemsAlreadyInserted, 
-			Map<String, Garantia> garantiasAlreadyInserted, 
+	public static Tranche createTranche(Contract contratoCSV, Map<String, Moeda> currenciesAlreadyInserted,
+			Map<String, Sistema> systemsAlreadyInserted, Map<String, Garantia> garantiasAlreadyInserted,
 			Connection connection) throws SQLException {
 		Statement stmt = connection.createStatement();
 		Tranche tranche = null;
@@ -487,7 +543,7 @@ public class RepositoryUtil {
 		String SQL = "SELECT SEQ_SISTEMA_AMORTIZACAO, NOM_SISTEMA_AMORTIZACAO, DSC_SISTEMA_AMORTIZACAO FROM DIVIDA_PI_2022.DIV_SISTEMA_AMORTIZACAO";
 		ResultSet rs = stmt.executeQuery(SQL);
 		System.out.println(SQL);
-		
+
 		while (rs.next()) {
 			Sistema system = new Sistema();
 			int id = rs.getInt("SEQ_SISTEMA_AMORTIZACAO");
@@ -500,14 +556,14 @@ public class RepositoryUtil {
 		}
 		return systemsDB;
 	}
-	
+
 	public static Map<String, Garantia> loadGarantiasAlreadyInserted(Connection connection) throws SQLException {
 		Map<String, Garantia> garantiasDB = new HashMap<String, Garantia>();
 		Statement stmt = connection.createStatement();
 		String SQL = "SELECT SEQ_GARANTIA, NOM_GARANTIA, DSC_GARANTIA FROM DIVIDA_PI_2022.DIV_GARANTIA_CONTRA_GARANTIA";
 		ResultSet rs = stmt.executeQuery(SQL);
 		System.out.println(SQL);
-		
+
 		while (rs.next()) {
 			Garantia garantia = new Garantia();
 			int id = rs.getInt("SEQ_GARANTIA");
@@ -520,7 +576,7 @@ public class RepositoryUtil {
 		}
 		return garantiasDB;
 	}
-	
+
 	public static Map<String, InstituicaoFinanceira> loadFinancialInstitutionsAlreadyInserted(Connection connection)
 			throws SQLException {
 		Map<String, InstituicaoFinanceira> financialInstitutionDB = new HashMap<String, InstituicaoFinanceira>();
@@ -571,7 +627,7 @@ public class RepositoryUtil {
 			}
 		}
 		Sistema newSystem = null;
-		if (null!=systemName && !systemName.isEmpty()) {
+		if (null != systemName && !systemName.isEmpty()) {
 			newSystem = createSystem(connection, systemName);
 			systemsAlreadyInserted.put(systemName, newSystem);
 		}
@@ -592,7 +648,7 @@ public class RepositoryUtil {
 		stmt.close();
 		return sistema;
 	}
-	
+
 	private static Garantia loadOrCreateGarantia(Connection connection, Map<String, Garantia> garantiasAlreadyInserted,
 			String nomeGarantia) throws SQLException {
 		Set<String> keySet = garantiasAlreadyInserted.keySet();
@@ -602,13 +658,13 @@ public class RepositoryUtil {
 			}
 		}
 		Garantia newGarantia = null;
-		if (null!=nomeGarantia && !nomeGarantia.isEmpty()) {
+		if (null != nomeGarantia && !nomeGarantia.isEmpty()) {
 			newGarantia = createGarantia(connection, nomeGarantia);
 			garantiasAlreadyInserted.put(nomeGarantia, newGarantia);
 		}
 		return newGarantia;
 	}
-	
+
 	private static Garantia createGarantia(Connection connection, String nomeGarantia) throws SQLException {
 		Statement stmt = connection.createStatement();
 		Garantia garantia = new Garantia();

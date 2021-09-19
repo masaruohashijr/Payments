@@ -1,5 +1,7 @@
 package com.logus.domain;
 
+import java.time.LocalDate;
+
 public interface Evento extends DBInserter {
 	String getDataPlanilha();
 
@@ -25,7 +27,7 @@ public interface Evento extends DBInserter {
 
 	String getCodigo();
 
-	String dbInsert(int seqTranche, int seqObrigacao);
+	String dbInsert(int seqTranche, int seqObrigacao, LocalDate diaEleito);
 
 	public enum TipoEventoEnum {
 

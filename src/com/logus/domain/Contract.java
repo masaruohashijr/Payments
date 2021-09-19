@@ -1,7 +1,10 @@
 package com.logus.domain;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -37,6 +40,9 @@ public class Contract {
 	private Map<String, Moeda> currenciesMap;
 	private InstituicaoFinanceira institution;
 	private double saldoDevedorAnoPassado;
+	private double percentualJuros;
+	private LocalDate diaEleito;
+	private double percentualTxCredito;
 
 	public Contract() {
 		super();
@@ -299,6 +305,30 @@ public class Contract {
 
 	public void setIndexadorCorrecaoMonetaria(String indexadorCorrecaoMonetaria) {
 		this.indexadorCorrecaoMonetaria = indexadorCorrecaoMonetaria;
+	}
+
+	public void setPercentualJuros(double percentualJuros) {
+		this.percentualJuros = percentualJuros;
+	}
+
+	public double getPercentualJuros() {
+		return percentualJuros;
+	}
+
+	public void setDiaEleito(LocalDate diaEleito) {
+		this.diaEleito = diaEleito;
+	}
+
+	public LocalDate getDiaEleito() {
+		return diaEleito;
+	}
+
+	public void setPercentualTxCredito(double percentualTxCredito) {
+		this.percentualTxCredito = percentualTxCredito;
+	}
+
+	public double getPercentualTxCredito() {
+		return percentualTxCredito;
 	}
 	
 }

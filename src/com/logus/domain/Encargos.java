@@ -1,5 +1,10 @@
 package com.logus.domain;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
+import com.logus.utils.TextUtils;
+
 public class Encargos
   implements Evento {
   private String dataPlanilha;
@@ -69,15 +74,16 @@ public class Encargos
   }
 
   @Override
-  public String dbInsert(int seqTranche, int seqObrigacao) {
+  public String dbInsert(int seqTranche, int seqObrigacao, LocalDate diaEleito) {
     String insert = "";
     String tabela = "DIV_EVENTO_TRANCHE";
     String campos = "(DAT_OCORRENCIA,DAT_PREVISAO,DSC_EVENTO,SIT_EVENTO,TIP_EVENTO,VAL_EVENTO,SEQ_OBRIGACAO,SEQ_TRANCHE_CONTRATO)";
     StringBuilder values = new StringBuilder();
     values
         .append("TO_DATE('" + this.dataPlanilha + "','dd/mm/yyyy')" + ",");
-    values
-        .append("TO_DATE('" + this.dataPlanilha + "','dd/mm/yyyy')" + ",");
+	DateTimeFormatter format = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+	LocalDate dataPrevisao = TextUtils.getDataPrevisao(String.valueOf(diaEleito.getDayOfMonth()), this.dataPlanilha, format);
+	values.append("TO_DATE('" + dataPrevisao.format(format) + "','dd/mm/yyyy')" + ",");
     values.append("'',");
     values.append("'" + this.situacaoEvento.toUpperCase().trim() + "',");
     values.append("'" + TipoEventoEnum.QUITACAO_OBRIGACAO + "',");

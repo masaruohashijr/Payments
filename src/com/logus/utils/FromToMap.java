@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -77,7 +78,7 @@ public class FromToMap {
 	public static Map<String, Contract> initDividas() {
 		try {
 			SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-			File myFile = new File("INFO DÍVIDAS.xls");
+			File myFile = new File("INFODIVIDAS/INFO DÍVIDAS.xls");
 			FileInputStream fis;
 			fis = new FileInputStream(myFile);
 			HSSFWorkbook wb = new HSSFWorkbook(fis);
@@ -125,6 +126,9 @@ public class FromToMap {
 				cell = row.getCell(7);
 				double numericCellValue = cell.getNumericCellValue();
 				contract.setValorContrato(String.valueOf(numericCellValue));
+				cell = row.getCell(9);
+				double prazo = cell.getNumericCellValue();
+				contract.setPrazo(String.valueOf((int)(prazo*12)+1));
 				cell = row.getCell(10);
 				String sistemaAmortizacao = cell.getStringCellValue().trim();
 				System.out.println(sistemaAmortizacao);
@@ -137,10 +141,22 @@ public class FromToMap {
 				String descricaoJuros = cell.getStringCellValue();
 				System.out.println(descricaoJuros);
 				contract.setIndexadorJuros(descricaoJuros);
+				cell = row.getCell(16);
+				LocalDateTime diaEleito = cell.getLocalDateTimeCellValue();
+				System.out.println(diaEleito);
+				contract.setDiaEleito(diaEleito.toLocalDate());
 				cell = row.getCell(18);
 				String descricaoCorrecao = cell.getStringCellValue();
 				System.out.println(descricaoCorrecao);
 				contract.setIndexadorCorrecaoMonetaria(descricaoCorrecao);
+				cell = row.getCell(20);
+				double percentualJuros = cell.getNumericCellValue();
+				System.out.println(percentualJuros);
+				contract.setPercentualJuros(percentualJuros);
+				cell = row.getCell(21);
+				double percentualTxCredito = cell.getNumericCellValue();
+				System.out.println(percentualTxCredito);
+				contract.setPercentualTxCredito(percentualTxCredito);
 				deparaDividas.get().put(nomeContrato, contract);
             }
 		} catch (IOException e) {

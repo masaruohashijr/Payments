@@ -1,5 +1,7 @@
 package com.logus.domain;
 
+import java.time.LocalDate;
+
 public class Ingresso implements Evento {
 	private String dataPlanilha;
 	private String situacaoEvento	;
@@ -56,7 +58,7 @@ public class Ingresso implements Evento {
 	  return "INGRESSO";
 	}
 	
-	public String dbInsert(int seqTranche, int seqObrigacao) {
+	public String dbInsert(int seqTranche, int seqObrigacao, LocalDate diaEleito) {
 		String insert = "";
 		String tabela = "DIV_LIBERACAO";
 		String campos = "(DAT_OCORRENCIA,DAT_PREVISAO,"
