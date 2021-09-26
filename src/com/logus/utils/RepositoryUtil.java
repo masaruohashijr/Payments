@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -234,8 +235,23 @@ public class RepositoryUtil {
 		LocalDate diaEleito = tranche.getContrato().getDiaEleito();		
 		if(diaEleito==null) {
 			diaEleito = LocalDate.parse(tranche.getContrato().getDataAssinatura(),format);
-		}				
-		obrigacao.setDtInicioPagamento(diaEleito.getDayOfMonth()+"/01/2021");
+		}
+		String dataAmortizacao = tranche.getContrato().getDataAmortizacao();
+		if(null!=dataAmortizacao) {
+			try {
+				Date dtAmortizacao = sdf.parse(dataAmortizacao);
+				String dataInicioPagamento = diaEleito.getDayOfMonth()+"/01/2021";
+				Date dtInicio = sdf.parse(dataInicioPagamento);
+				if(dtInicio.before(dtAmortizacao)) {
+					obrigacao.setDtInicioPagamento(dataAmortizacao);
+				} else {
+					obrigacao.setDtInicioPagamento(dataInicioPagamento);
+				}
+				
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+		}
 		stmt.execute(obrigacao.dbInsert(tranche, contractInfo));
 		connection.commit();
 		ResultSet rs = stmt.executeQuery("SELECT seq_count FROM sequence where seq_name = 'seq_obrigacao'");

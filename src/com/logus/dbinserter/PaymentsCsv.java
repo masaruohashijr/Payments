@@ -44,14 +44,19 @@ public class PaymentsCsv {
 
 	private static SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 
-//	private static String[] debts = new String[] { "CEF/dvn40700 - PROTRANSPORTES.csv",
-//			"CEF/dvn40700 - SANPARATODOS_PICOS.csv", "CEF/dvn40700 - PROMORADIA_I.csv",
-//			"CEF/dvn40700 - PROMORADIA_II.csv", "CEF/dvn40700 - PROMORADIA_III.csv",
-//			"CEF/dvn40700 - SANPARATODOS_MARCOLANDIA.csv", "CEF/dvn40700 - SANPARATODOS_II_PARNAIBA.csv",
-//			"CEF/dvn40700 - SANPARATODOS_III_PARNAIBA.csv", "CEF/dvn40700 - SANPARATODOS_II_TERESINA.csv",
-//			"CEF/dvn40700 - SANPARATODOS_SAO_FRANCISCO_PIAUI.csv", "CEF/dvn40700 - SANPARATODOS_SAO_JOAO_PIAUI.csv",
-//			"CEF/dvn40700 - SANPARATODOS_UNIAO.csv", "CEF/dvn40700 - SANPARATODOS_SAO_PEDRO_PIAUI.csv", 
-	private static String[] debts = new String[] { "CEF/dvn40700 - FINISA_I.csv" };
+	/*private static String[] debts = new String[] { "CEF/dvn40700 - PROTRANSPORTES.csv",
+			"CEF/dvn40700 - SANPARATODOS_PICOS.csv", "CEF/dvn40700 - PROMORADIA_I.csv",
+			"CEF/dvn40700 - PROMORADIA_II.csv", "CEF/dvn40700 - PROMORADIA_III.csv",
+			"CEF/dvn40700 - SANPARATODOS_MARCOLANDIA.csv", "CEF/dvn40700 - SANPARATODOS_II_PARNAIBA.csv",
+			"CEF/dvn40700 - SANPARATODOS_III_PARNAIBA.csv", "CEF/dvn40700 - SANPARATODOS_II_TERESINA.csv",
+			"CEF/dvn40700 - SANPARATODOS_SAO_FRANCISCO_PIAUI.csv", "CEF/dvn40700 - SANPARATODOS_SAO_JOAO_PIAUI.csv",
+			"CEF/dvn40700 - SANPARATODOS_UNIAO.csv", 
+			"CEF/dvn40700 - SANPARATODOS_SAO_PEDRO_PIAUI.csv", 
+			"CEF/dvn40700 - FINISA_II.csv", 
+			"BRB/dvn40700 - BRB_RODOVIAS.csv",
+			"BRB/dvn40700 - BRB_RODOVIAS_II.csv",
+			"CEF/dvn40700 - FINISA_I.csv"}; */
+	private static String[] debts = new String[] { "ITAU/dvn40700 - ITAU_CAPEX.csv" };
 
 	public static void main(String[] args) {
 		Chronometer ch = new Chronometer();
@@ -241,6 +246,9 @@ public class PaymentsCsv {
 								DateTimeFormatter format = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 								LocalDate dtEventoDiferenca = LocalDate.parse(evento.getDataPlanilha(), format);
 								dtEventoDiferenca = dtEventoDiferenca.minusMonths(1);
+								if(contractInfo.getSistema().equals("SAC")) {
+									dtEventoDiferenca = dtEventoDiferenca.minusDays(1);
+								}
 								System.out.println(dtEventoDiferenca.format(format));
 								Evento eventoDiferenca = new Diferenca(dtEventoDiferenca.format(format),
 										String.valueOf(diferenca));
@@ -275,8 +283,8 @@ public class PaymentsCsv {
 					RepositoryUtil.updateFinalDateTrancheContract(currentContract, finalDateContract, connection);
 					RepositoryUtil.updateFinalDateContract(currentContract, finalDateContract, connection);
 				}
-				ch.stop();
 			}
+			ch.stop();
 		} catch (IOException | SQLException | ConnectionException e) {
 			e.printStackTrace();
 		} catch (ParseException e) {
@@ -304,6 +312,9 @@ public class PaymentsCsv {
 	private static void endAndCloseAll(Connection connection, Statement statement, BufferedReader lineReader,
 			Chronometer ch) {
 		try {
+			statement.executeBatch();
+			// Send to database
+			connection.commit();			
 			System.out.println("*****************************");
 			System.out.println("*****************************");
 			System.out.println("***********F I M*************");

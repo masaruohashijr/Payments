@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -65,6 +66,7 @@ public class FromToMap {
 		depara.get().put("PARC. ORD/SIMPLIF. INSS E", "");
 		depara.get().put("PARCELAMENTO SIMPLIF INSS", "");
 		depara.get().put("BRB RODOVIAS", "BRB - RODOVIAS");
+		depara.get().put("BRB RODOVIAS II", "BRB - RODOVIAS II");
 		depara.get().put("PROFISCO - BID", "PROFISCO I");
 		depara.get().put("PROFISCO II", "PROFISCO II");
 		depara.get().put("BIRD - PCPR II-2A.  ETAPA", "PCPR-II - 2a. ETAPA");
@@ -77,6 +79,7 @@ public class FromToMap {
 	
 	public static Map<String, Contract> initDividas() {
 		try {
+			DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 			SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 			File myFile = new File("INFODIVIDAS/INFO DÍVIDAS.xls");
 			FileInputStream fis;
@@ -145,6 +148,7 @@ public class FromToMap {
 				LocalDateTime diaEleito = cell.getLocalDateTimeCellValue();
 				System.out.println(diaEleito);
 				contract.setDiaEleito(diaEleito.toLocalDate());
+				contract.setDataAmortizacao(diaEleito.toLocalDate().format(dtf));
 				cell = row.getCell(18);
 				String descricaoCorrecao = cell.getStringCellValue();
 				System.out.println(descricaoCorrecao);
