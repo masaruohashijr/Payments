@@ -348,7 +348,7 @@ public class RepositoryUtil {
 		LocalDate dtAssinatura = LocalDate.parse(dataAssinatura, format);
 		String dataTermino = tranche.getContrato().getDataTermino();
 		LocalDate dtTermino = LocalDate.parse(dataTermino, format);
-		long monthsBetween = ChronoUnit.MONTHS.between(dtAssinatura, dtTermino);
+		long monthsBetween = ChronoUnit.MONTHS.between(dtAssinatura, dtTermino)+1;
 		return String.valueOf(monthsBetween);
 	}
 
@@ -429,7 +429,8 @@ public class RepositoryUtil {
 	}
 
 	public static Tranche createTranche(Contract contratoCSV, Map<String, Moeda> currenciesAlreadyInserted,
-			Map<String, Sistema> systemsAlreadyInserted, Map<String, Garantia> garantiasAlreadyInserted,
+			Map<String, Sistema> systemsAlreadyInserted, Map<String, Garantia> garantiasAlreadyInserted, 
+			Map<String,InstituicaoFinanceira> financialInstitutionsAlreadyInserted,
 			Connection connection) throws SQLException {
 		Statement stmt = connection.createStatement();
 		Tranche tranche = null;
@@ -440,7 +441,8 @@ public class RepositoryUtil {
 		}
 		Sistema system = loadOrCreateSystem(connection, systemsAlreadyInserted, contratoCSV.getSistema());
 		Garantia garantia = loadOrCreateGarantia(connection, garantiasAlreadyInserted, contratoCSV.getGarantia());
-		stmt.execute(tranche.dbInsert(contratoCSV, currenciesAlreadyInserted, system, garantia));
+		InstituicaoFinanceira instituicaoFinanceira = loadOrCreateFinancialInstitution(connection, financialInstitutionsAlreadyInserted, contratoCSV.getNomeCredor());
+		stmt.execute(tranche.dbInsert(contratoCSV, currenciesAlreadyInserted, system, garantia, instituicaoFinanceira));
 		connection.commit();
 		try {
 			Thread.sleep(500);
@@ -451,6 +453,10 @@ public class RepositoryUtil {
 		if (rs.next()) {
 			tranche.setId(rs.getInt("seq_count"));
 		}
+		String dbInsertParametro = tranche.dbInsertParametro();
+		System.out.println(dbInsertParametro);
+		stmt.execute(dbInsertParametro);
+		connection.commit();
 		rs.close();
 		stmt.close();
 		return tranche;

@@ -2,6 +2,7 @@ delete from divida_pi_2022.div_liberacao where seq_liberacao > 0;
 delete from divida_pi_2022.div_evento_tranche where seq_evento_contrato > 0;
 delete from divida_pi_2022.div_obrigacao where seq_obrigacao > 0;
 delete from divida_pi_2022.div_parametro_tranche where seq_tranche_contrato > 0;
+delete from divida_pi_2022.div_pagamento where seq_pagamento > 0;
 delete from divida_pi_2022.div_tranche_contrato where seq_tranche_contrato > 0;
 delete from divida_pi_2022.div_contrato where seq_contrato > 0;
 delete from divida_pi_2022.div_sistema_amortizacao where seq_sistema_amortizacao > 0;

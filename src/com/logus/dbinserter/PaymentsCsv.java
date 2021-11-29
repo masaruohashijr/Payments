@@ -44,19 +44,42 @@ public class PaymentsCsv {
 
 	private static SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 
-	/*private static String[] debts = new String[] { "CEF/dvn40700 - PROTRANSPORTES.csv",
-			"CEF/dvn40700 - SANPARATODOS_PICOS.csv", "CEF/dvn40700 - PROMORADIA_I.csv",
-			"CEF/dvn40700 - PROMORADIA_II.csv", "CEF/dvn40700 - PROMORADIA_III.csv",
-			"CEF/dvn40700 - SANPARATODOS_MARCOLANDIA.csv", "CEF/dvn40700 - SANPARATODOS_II_PARNAIBA.csv",
-			"CEF/dvn40700 - SANPARATODOS_III_PARNAIBA.csv", "CEF/dvn40700 - SANPARATODOS_II_TERESINA.csv",
-			"CEF/dvn40700 - SANPARATODOS_SAO_FRANCISCO_PIAUI.csv", "CEF/dvn40700 - SANPARATODOS_SAO_JOAO_PIAUI.csv",
-			"CEF/dvn40700 - SANPARATODOS_UNIAO.csv", 
+	private static String[] debts = new String[] { 
+			"CEF/dvn40700 - PROTRANSPORTES.csv",
+			"CEF/dvn40700 - SANPARATODOS_PICOS.csv",
+			"CEF/dvn40700 - PROMORADIA_I.csv",			 
+			"CEF/dvn40700 - PROMORADIA_II.csv", 
+			"CEF/dvn40700 - PROMORADIA_III.csv",
+			"CEF/dvn40700 - SANPARATODOS_MARCOLANDIA.csv", 
+			"CEF/dvn40700 - SANPARATODOS_II_PARNAIBA.csv",			 
+			"CEF/dvn40700 - SANPARATODOS_III_PARNAIBA.csv", 
+			"CEF/dvn40700 - SANPARATODOS_II_TERESINA.csv",
+			"CEF/dvn40700 - SANPARATODOS_SAO_FRANCISCO_PIAUI.csv", 
+			"CEF/dvn40700 - SANPARATODOS_SAO_JOAO_PIAUI.csv",
+			"CEF/dvn40700 - SANPARATODOS_UNIAO.csv",
 			"CEF/dvn40700 - SANPARATODOS_SAO_PEDRO_PIAUI.csv", 
 			"CEF/dvn40700 - FINISA_II.csv", 
 			"BRB/dvn40700 - BRB_RODOVIAS.csv",
+			"ITAU/dvn40700 - ITAU_CAPEX.csv",
 			"BRB/dvn40700 - BRB_RODOVIAS_II.csv",
-			"CEF/dvn40700 - FINISA_I.csv"}; */
-	private static String[] debts = new String[] { "ITAU/dvn40700 - ITAU_CAPEX.csv" };
+			"CEF/dvn40700 - FINISA_I.csv",
+			"BB/dvn40700 - PRODESENVOLVIMENTO_II.csv",
+			"BB/dvn40700 - PRODESENVOLVIMENTO_II_2.csv", 
+			"BB/dvn40700 - PRODESENVOLVIMENTO_III.csv",
+			"Parcelamentos/PARC. EMGERPI ITR_PERT.csv",
+			"Parcelamentos/PARC. EMGERPI LEI 12996 PR.csv",
+			"Parcelamentos/PARC. EMGERPI LEI12996 TR.csv",
+			"Parcelamentos/PARC. INSS LEI 12810-EXEC.csv",
+			"Parcelamentos/PARC. INSS LEI12810-LEGISL.csv",
+			"Parcelamentos/PARC. INSS LEI 12810 MP.csv",
+			"Parcelamentos/PARC. INSS SESAPI.csv",
+			"Parcelamentos/PARC. INSS SIMPL ORD EDUCAÇÃO.csv",
+			"Parcelamentos/PARC. L 11941 EMGERPI-OUTR.csv",
+			"Parcelamentos/PARC. ORD_SIMPLIF. INSS E.csv",
+			"Parcelamentos/PARC. PASEP LEI 12.810_13.csv",
+			"Parcelamentos/PARC. PERT ASSEMBLÉIA SENADO.csv",
+			"Parcelamentos/PARC. SIMPL FGTS EMGERPI.csv",
+			"Parcelamentos/PARC. SIMPLIF INSS.csv"};
 
 	public static void main(String[] args) {
 		Chronometer ch = new Chronometer();
@@ -83,6 +106,7 @@ public class PaymentsCsv {
 			Map<String, InstituicaoFinanceira> financialInstitutionsAlreadyInserted = RepositoryUtil
 					.loadFinancialInstitutionsAlreadyInserted(connection);
 
+			int qtdEventosRealizados = 1;
 			for (String debt : debts) {
 
 				lineReader = FileReaderUtil.get(debt);
@@ -90,7 +114,6 @@ public class PaymentsCsv {
 				String lineText = null;
 
 				int contractCounter = 0;
-				int qtdEventosRealizados = 1;
 				int batchSize = 1000;
 				double totalLiberacoes = 0.0;
 				double totalAmortizacoes = 0.0;
@@ -114,7 +137,7 @@ public class PaymentsCsv {
 									connection);
 							finalDateContract = null;
 						}
-						if (!ar[0].contains("10030003")) {
+						//if (!ar[0].contains("10030003")) {
 							// a new object of Contract is created.
 							currentContract = new Contract(ar);
 							totalAmortizacoes = 0.0;
@@ -122,7 +145,7 @@ public class PaymentsCsv {
 							registrarDiferenca = true;
 							// logging.
 							System.out.println(++contractCounter + " " + currentContract.toString());
-						}
+						//}
 						// get the translated key.
 						String translatedKey = mapKeys.get(currentContract.getNome());
 						// if there were no translated key so it means that is really a new contract.
@@ -179,6 +202,10 @@ public class PaymentsCsv {
 					// a new one is created and injected.
 					if (null == tranche || ar[0].contains("10030003")) {
 						Contract contractInfo = extractedInfo(mapKeys, mapInfo, currentContract);
+						Contract aux = contractsAlreadyInserted.get(contractInfo.getNome());
+						if(aux!=null) {
+							currentContract.setId(aux.getId());
+						}
 						currentContract.setDataAssinatura(ar[3]);
 						currentContract.setDataTermino(contractInfo.getDataTermino());
 						currentContract.setSistema(contractInfo.getSistema());
@@ -190,7 +217,7 @@ public class PaymentsCsv {
 						currentContract.setPercentualTxCredito(contractInfo.getPercentualTxCredito());
 						currentContract.setPrazo(contractInfo.getPrazo());
 						tranche = RepositoryUtil.createTranche(currentContract, currenciesAlreadyInserted,
-								systemsAlreadyInserted, garantiasAlreadyInserted, connection);
+								systemsAlreadyInserted, garantiasAlreadyInserted, financialInstitutionsAlreadyInserted, connection);
 						currentContract.setTranche(tranche);
 						tranche.setContrato(currentContract);
 					}
@@ -278,6 +305,8 @@ public class PaymentsCsv {
 					if (currentContract.getContCred().equals("190.491-39")) {
 						finalDateContract = sdf.parse("08/03/2028");
 					} else {
+						Contract contractInfo = extractedInfo(mapKeys, mapInfo, currentContract);
+						currentContract.setDataTermino(contractInfo.getDataTermino());
 						finalDateContract = sdf.parse(currentContract.getDataTermino());
 					}
 					RepositoryUtil.updateFinalDateTrancheContract(currentContract, finalDateContract, connection);

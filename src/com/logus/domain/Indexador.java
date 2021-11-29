@@ -31,9 +31,9 @@ public class Indexador {
 	public String dbInsert() {
 		String insert = "";
 		String tabela = "DIV_INDEXADOR";
-		String campos = "(nom_indexador,acro_indexador,tipo_medicao,flg_ativo)";
+		String campos = "(nom_indexador,cod_indexador,seq_servico,acro_indexador,tipo_medicao,flg_ativo)";
 		StringBuilder values = new StringBuilder();
-		values.append("'"+this.nome+"','"+this.acronimo+"','INDICE_MES',1");
+		values.append("'"+this.nome+"',0,1,'"+this.acronimo+"','INDICE_MES',1");
 		insert = DBInserter.INSERT_INTO + DBInserter.OWNER + "." + tabela + campos + DBInserter.STR_VALUES + values
 				+ DBInserter.CLOSING;
 		return insert;
